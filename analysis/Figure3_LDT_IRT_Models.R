@@ -7,7 +7,9 @@ library(corrplot)
 library(RColorBrewer)
 library(stringr)
 library(psych)
-setwd('~/git/ROAR-LDT-Public/data_allsubs/')
+
+# Desktop
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs")
 
 # Read data
 df <- read.csv('LDT_alldata_wide_sorted_newcodes.csv')
@@ -17,7 +19,7 @@ word.stats = read.csv('wordStatistics.csv')
 word.stats$items <- word.stats$STRING
 
 # Remove outliers from data frame
-sub.outliers <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/Subject_RT_Outliers.csv')
+sub.outliers <- read.csv('Subject_RT_Outliers.csv')
 df <- left_join(df,select(sub.outliers,subj,outlier))
 df <- filter(df,outlier==FALSE)
 df <- select(df,-outlier)
@@ -35,7 +37,7 @@ item.cors$realpseudo <- factor(!is.na(item.cors$FREQ),levels=c(TRUE,FALSE),label
 
 # Item correlation with wj
 #Load and join metadata
-metadata <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/metadata_all_newcodes.csv')
+metadata <- read.csv('metadata_all_newcodes.csv')
 # remove metadata that is more than 12 months old
 metadata <- filter(metadata,MonthsSinceTesting<12)
 # match data types

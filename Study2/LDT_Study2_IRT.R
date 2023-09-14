@@ -13,15 +13,15 @@ library(lme4)
 library(tidyr)
 library(lmerTest)
 
-setwd('~/git/ROAR-LDT-Public/Study2/')
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
 # Read data
-dfv1 <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/LDT_alldata_wide_newcodes.csv')
-dfv2 <- read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_alldata_wide_v2_newcodes.csv')
+dfv1 <- read.csv('data_allsubs/LDT_alldata_wide_newcodes.csv')
+dfv2 <- read.csv('Study2/data/LDT_alldata_wide_v2_newcodes.csv')
 df <- full_join(dfv1,dfv2)
-metadata <- read.csv('~/git/ROAR-LDT-Public/Study2/data/metadata_all_roundeddates_newcodes.csv')
+metadata <- read.csv('Study2/data/metadata_all_roundeddates_newcodes.csv')
 metadata <- select(metadata, subj, wj_brs,	wj_rf,	wj_lwid_raw,	wj_lwid_ss,	wj_wa_raw,	wj_wa_ss,	twre_index,	twre_swe_raw,	twre_swe_ss,	twre_pde_raw,	twre_pde_ss,	wasi_fs2,	ctopp_rapid,	wasi_vocab_raw,	wasi_vocab_ts,	wasi_mr_raw,	wasi_mr_ts,MonthsSinceTesting,agenow,	visit_age)
-demographic <- read.csv('~/git/ROAR-LDT-Public/Study2/data/demographic_all_newcodes.csv')
+demographic <- read.csv('Study2/data/demographic_all_newcodes.csv')
 metadata <- left_join(metadata, demographic)
 
 # Fit IRT model and compute ability
@@ -51,8 +51,8 @@ sub.data <- filter(sub.data,MonthsSinceTesting<12)
 print(sprintf('%d Subjects with wj_lwid_raw scores in the last 12 months',dim(sub.data)[1]))
 
 # Look at RT data to detect subjects with odd response properties
-sub.sum <- left_join(sub.data,select(read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_summarymeasures_wide_v2_newcodes.csv'), -date_ldt,-pcor_all))
-rt.data <-read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_alldata_long_v2_newcodes.csv')
+sub.sum <- left_join(sub.data,select(read.csv('Study2/data/LDT_summarymeasures_wide_v2_newcodes.csv'), -date_ldt,-pcor_all))
+rt.data <-read.csv('Study2/data/LDT_alldata_long_v2_newcodes.csv')
 sub.sum<- left_join(sub.sum,summarize(group_by(rt.data,subj),median.rt=median(log10(rt)),mean.rt=mean(log10(rt)), sd.rt=sd(log10(rt)),median.raw.rt=median(rt), mean.raw.rt=mean(rt), sd.raw.rt=sd(rt),
                                       Q1.rt=quantile(rt,0.25), Q3.rt=quantile(rt,0.75),IQR.rt=IQR(rt)))
 
@@ -68,7 +68,7 @@ ggplot(sub.sum,aes(x=mean.rt,y=res,color=outlier)) +
 ggplot(sub.sum,aes(x=scale(mean.rt),y=scale(median.rt),color=abs(res))) +
   geom_point()
 
-df.long <- read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_alldata_long_v2_newcodes.csv')
+df.long <- read.csv('Study2/data/LDT_alldata_long_v2_newcodes.csv')
 df.lists <- summarise(group_by(df.long,subj,wordList,stimBlock),ncor=sum(acc))
 sub.sum <- left_join(sub.sum,summarise(group_by(df.lists,subj),sd.ncor=sd(ncor),m.ncor=mean(ncor)),by='subj')
 ggplot(sub.sum, aes(x=sd.ncor,y=res2))+
@@ -177,12 +177,12 @@ gt1
 ggsave('itemcors.pdf',gt1,width=5,height=5)
 
 ## Now try to better predict things
-sub.sum <- left_join(sub.data,select(read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_summarymeasures_wide_v2_newcodes.csv'), -date_ldt,-pcor_all))
+sub.sum <- left_join(sub.data,select(read.csv('Study2/data/LDT_summarymeasures_wide_v2_newcodes.csv'), -date_ldt,-pcor_all))
 ICC(select(sub.sum,pcor_A,pcor_B,pcor_C))
-sub.rt <- left_join(sub.data,read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_rtdata_wide_v2_newcodes.csv'))
+sub.rt <- left_join(sub.data,read.csv('Study2/data/LDT_rtdata_wide_v2_newcodes.csv'))
 
 # Look at list and order effects
-df.long <- read.csv('~/git/ROAR-LDT-Public/Study2/data/LDT_alldata_long_v2_newcodes.csv')
+df.long <- read.csv('Study2/data/LDT_alldata_long_v2_newcodes.csv')
 df.long$corinc = factor(df.long$acc)
 lmer1 <- glmer(corinc ~ scale(stimOrder) + (scale(stimOrder) | subj),data = df.long, family = binomial)
 summary(lmer1)

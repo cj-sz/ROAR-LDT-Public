@@ -13,7 +13,11 @@ library(lmerTest)
 generate.lists=FALSE
 
 ## Loading data
-setwd('~/git/ROAR-LDT-Public/data_allsubs/')
+
+# Desktop
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/")
+
+
 df <- read.csv('LDT_alldata_wide_sorted_nooutliers.csv') # data with outliers removed
 words.irt1 = read.csv('RaschModelWords.csv')
 words.irt2 = read.csv('RaschModel_2PLWords.csv')
@@ -24,9 +28,9 @@ word.stats = read.csv('wordStatistics.csv')
 word.stats$words <- word.stats$STRING # if and in get changed in R so we change them here
 word.exclude <- read.csv('WordsToExclude.csv')
 
-sub.data <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/SubjectThetaEstimates.csv')
+sub.data <- read.csv('SubjectThetaEstimates.csv')
 # Load and join metadata
-metadata <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/metadata_all_newcodes.csv')
+metadata <- read.csv('metadata_all_newcodes.csv')
 #NaN metadata entries that are older than 12 months
 metadata$wj_lwid_raw[metadata$MonthsSinceTesting>=12] <- NA
 # match data types
@@ -34,7 +38,7 @@ sub.data$subj <- as.character(sub.data$subj)
 metadata$subj <- as.character(metadata$subj)
 sub.data <- left_join(sub.data,metadata)
 # Load in WJ -> Grade equivalent Look Up Table
-wj.lwid.grade <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/WJ-LWID-GradeEquiv.csv')
+wj.lwid.grade <- read.csv('WJ-LWID-GradeEquiv.csv')
 # Join in age and grade equivalent WJ scores
 sub.data <- left_join(sub.data, wj.lwid.grade)
 

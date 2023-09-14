@@ -8,6 +8,10 @@ library(RColorBrewer)
 library(reshape2)
 library(psych)
 library(CTT)
+
+#Desktop
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/")
+
 # Function to Get lower triangle of the correlation matrix
 get_lower_tri<-function(cormat){
   cormat[upper.tri(cormat)] <- NA
@@ -19,12 +23,10 @@ get_upper_tri <- function(cormat){
   return(cormat)
 }
 
-# Load data
-setwd('~/git/ROAR-LDT-Public/data_allsubs/')
-# sub.data <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/SubjectThetaEstimates.csv')
-metadata <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/metadata_all_newcodes.csv')
-sub.data <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/LDT_summarymeasures_wide_newcodes.csv')
-sub.outliers <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/Subject_RT_Outliers.csv')
+# sub.data <- read.csv('SubjectThetaEstimates.csv')
+metadata <- read.csv('metadata_all_newcodes.csv')
+sub.data <- read.csv('LDT_summarymeasures_wide_newcodes.csv')
+sub.outliers <- read.csv('Subject_RT_Outliers.csv')
 sub.outliers$subj <- as.character(sub.outliers$subj)
 
 # match data types

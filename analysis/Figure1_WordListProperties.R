@@ -4,12 +4,15 @@ library(gridExtra)
 library(RColorBrewer)
 library(lme4)
 library(lmerTest)
-setwd('~/git/ROAR-LDT-Public/data_allsubs/')
+
+# Desktop
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/")
+
 word.stats = read.csv('wordStatistics.csv')
 word.stats$word <- as.character(word.stats$STRING)
 sub.data <- read.csv('LDT_alldata_long_newcodes.csv')
 sub.data <- left_join(sub.data,word.stats)
-metadata <- read.csv('~/git/ROAR-LDT-Public/data_allsubs/metadata_all_newcodes.csv')
+metadata <- read.csv('metadata_all_newcodes.csv')
 sub.data <- left_join(sub.data,metadata)
 
 # Scatter plot of corr values
@@ -190,6 +193,8 @@ print(sprintf('%.5f percent of trials have RTs shorter than %.0f times the IQR f
 
 rt.data<-filter(rt.data, (rt < (Q3.rt + thresh*IQR.rt) & rt > (Q1.rt - thresh*IQR.rt)))
 print(sprintf('A total of %.5f percent of trials were removed' ,100*((total_responses-dim(rt.data)[1])/total_responses)))
+
+print(h1a)
 
 rt.data.c<-filter(rt.data, acc==1)
 
