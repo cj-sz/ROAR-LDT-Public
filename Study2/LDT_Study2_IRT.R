@@ -13,7 +13,11 @@ library(lme4)
 library(tidyr)
 library(lmerTest)
 
-setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+# Desktop
+# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+
+# Laptop
+setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
 
 # Read data
 dfv1 <- read.csv('data_allsubs/LDT_alldata_wide_newcodes.csv')

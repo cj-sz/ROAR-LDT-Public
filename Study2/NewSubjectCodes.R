@@ -1,10 +1,14 @@
 library(dplyr)
 
 # Read data
-setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+# Desktop
+# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
-dfv1 <- read.csv('data_allsubs/LDT_alldata_wide.csv')
-dfv2 <- read.csv('Study2/data/LDT_alldata_wide_v2.csv')
+# Laptop
+setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
+
+dfv1 <- read.csv('data_allsubs/LDT_alldata_wide_newcodes.csv')
+dfv2 <- read.csv('Study2/data/LDT_alldata_wide_v2_newcodes.csv')
 dfv1$subj <- dfv1$subj
 dfv2$subj <- dfv2$subj
 
@@ -14,9 +18,9 @@ df$subj <-1:dim(df)[1]
 df.1 <- df[1:dim(dfv1)[1],]
 df.2 <- df[seq(dim(dfv1)[1]+1,dim(dfv1)[1]+dim(dfv2)[1]),]
 # read in metadata and demographics
-metadata.1 <- read.csv('data_allsubs/metadata_all.csv')
+metadata.1 <- read.csv('data_allsubs/metadata_all_newcodes.csv')
 demographic.1 <- read.csv('data_allsubs/demographic_all.csv')
-metadata.2 <- read.csv('Study2/data/metadata_all_roundeddates.csv')
+metadata.2 <- read.csv('Study2/data/metadata_all_roundeddates_newcodes.csv')
 demographic.2 <- read.csv('Study2/data/demographic_all.csv')
 # Swap in new subj column
 metadata.1 <- select(left_join(df.1,metadata.1),-record_id)
