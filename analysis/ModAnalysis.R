@@ -10,11 +10,14 @@ library(multilevel)
 library(mediation)
 
 #### Load data ####
-setwd('~/git/ROAR-LDT/data_allsubs/')
-metadata <- read.csv('~/git/ROAR-LDT/data_allsubs/metadata_all.csv')
-sub.data <- read.csv('~/git/ROAR-LDT/data_allsubs/LDT_summarymeasures_wide.csv')
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs")
+
+# Same issue here. Newcodes versions exist. But not sure which to use.
+# Trying to switch these to newcodes versions results in errors.
+metadata <- read.csv('metadata_all.csv')
+sub.data <- read.csv('LDT_summarymeasures_wide.csv')
 metadata <- rename(metadata,subj = record_id)
-sub.outliers <- read.csv('~/git/ROAR-LDT/data_allsubs/Subject_RT_Outliers.csv')
+sub.outliers <- read.csv('Subject_RT_Outliers.csv')
 sub.outliers$subj <- as.character(sub.outliers$subj)
 
 # match data types

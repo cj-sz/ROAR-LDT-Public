@@ -8,14 +8,20 @@ library(RColorBrewer)
 library(lme4)
 
 # Load data
-setwd('~/git/ROAR-LDT/data_allsubs/')
-cur_dir<-'~/git/ROAR-LDT/data_allsubs/'
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/")
+cur_dir<-'C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/'
 #####
 
 word.stats = read.csv('wordStatistics.csv')
 word.stats$word <- as.character(word.stats$STRING)
 
 #Read data
+# Problem with these files as well. Similar names exist, which to use?
+# Tried substituting newcodes for these and received the following error:
+#Error in `chr_as_locations()`:
+#  ! Can't rename columns that don't exist.
+#✖ Column `record_id` doesn't exist.
+Run `rlang::last_error()` to see where the error occurred.
 sub.data <- read.csv('LDT_alldata_long.csv')
 sub.data <- left_join(sub.data,word.stats)
 metadata <- read.csv('metadata_all.csv')

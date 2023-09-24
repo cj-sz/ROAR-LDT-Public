@@ -9,10 +9,11 @@ library(reshape2)
 library(psych)
 
 # Load data
-setwd('~/git/ROAR-LDTdata_allsubs/')
-cur_dir<-'~/git/ROAR-LDT/data_allsubs/'
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/")
+cur_dir<-'C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/data_allsubs/'
 #####
 
+# These files are giving errors. There are files that exist with similar names, i.e. _newcodes, etc. but not sure which to use.
 metadata <- read.csv(paste0(cur_dir,'metadata_all.csv'))
 sub.data <- read.csv(paste0(cur_dir,'LDT_summarymeasures_wide.csv'))
 #sub.data.rt <- read.csv(paste0(cur_dir,'LDT_summarymeasures_wide_RT.csv'))
