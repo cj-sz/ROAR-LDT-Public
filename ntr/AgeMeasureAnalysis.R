@@ -12,6 +12,7 @@ metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
 long_newcodes_data = read.csv("data_allsubs/LDT_alldata_long_newcodes.csv")
 wide_newcodes_data = read.csv("data_allsubs/LDT_alldata_wide_newcodes.csv")
 
+
 # Rounding function
 # Takes in a list of elements, and a number of trailing decimal places to be
 # specified. Rounds all values in the list accordingly, and removes extra
@@ -23,11 +24,12 @@ round_list <- function(list, digits) {
   return(rounded_list)
 }
 
-# First, remove all subjects whose ages are unknown from the metadata, and 
-# convert remaining ages to age in years. Rounding to 2 decimal places for the 
-# age
+# Changing metadata to reflect age in years
 updated_metadata <- filter(metadata, !is.na(visit_age))
-updated_metadata[2] <- round_list(updated_metadata[2]/12, 2)
+updated_metadata[2] <- updated_metadata[2]/12
+# USE THIS FOR ROUNDED AGE DATA IN PLACE OF ABOVE LINE
+# updated_metadata[2] <- round_list(updated_metadata[2]/12, 2)
+
 # Get the max and min age from the data we have
 min_age <- min(as.numeric(updated_metadata$visit_age))
 max_age <- max(as.numeric(updated_metadata$visit_age))
@@ -46,6 +48,9 @@ updated_wide_newcodes <- data.frame(subj, wide_newcodes_data) %>%
 
 # Add age data to the updated_long_newcodes next to each subject
 updated_long_newcodes <- merge(updated_long_newcodes, updated_metadata[, c("subj", "visit_age")], by = "subj", all.x = TRUE)
+
+# Saves this data to an output file
+# write.csv(updated_long_newcodes, "updated_long_newcodes.csv")
 
 # Create a data frame of data frames, based on the range of ages. Each sub
 # data frame consists of all subjects in that age group, and the words they
