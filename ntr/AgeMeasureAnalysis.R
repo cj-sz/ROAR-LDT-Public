@@ -2,7 +2,10 @@ library(tidyverse)
 library(dplyr)
 
 # Desktop
-setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+
+# Laptop
+setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
 
 # Load in original required data
 metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
@@ -41,34 +44,40 @@ subj <- 1:120
 updated_wide_newcodes <- data.frame(subj, wide_newcodes_data) %>%
   filter(subj %in% updated_metadata$subj)
 
+# Add age data to the updated_long_newcodes next to each subject
+updated_long_newcodes <- merge(updated_long_newcodes, updated_metadata[, c("subj", "visit_age")], by = "subj", all.x = TRUE)
+
 # Create a data frame of data frames, based on the range of ages. Each sub
 # data frame consists of all subjects in that age group, and the words they
 # were tested on along with their accuracy.
 # First convert the min and max ages from the updated_metadata to their
 # integer values, and iterate through these ages
 # The data recorded is based on the updated_long_newcodes dataframe.
-age_bin_data <- list()
+# Data is exported to csv's for each age bin. Named based on lower bound
+# (i.e. bin_7.csv refers to ages (7:8])
+dir.create("age_data")
+# Note below is broken again (adds all subjects to everything)
 for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
   temp_df <- data.frame()
+  out_path <- paste0("age_data/bin_", age - 1, ".csv")
   # Iterate through all subjects
-  for (subj in updated_metadata$subj) {
+  for (subject in updated_metadata$subj) {
     # If that subject is within the desired range
-    if (!is.na(updated_metadata[subj, "visit_age"]) &&
-               as.numeric(updated_metadata[subj, "visit_age"]) > (age - 1) && 
-               as.numeric(updated_metadata[subj, "visit_age"]) <= age) {
+    if (!is.na(updated_metadata[subject, "visit_age"]) &&
+               as.numeric(updated_metadata[subject, "visit_age"]) > (age - 1) && 
+               as.numeric(updated_metadata[subject, "visit_age"]) <= age) {
       # Add all of their data to the data frame
-      temp_df <- rbind(temp_df, subset(updated_long_newcodes, subj == subj))
+      # broken in this line, needs to be fixed
+      temp_df <- rbind(temp_df, subset(updated_long_newcodes, updated_long_newcodes$visit_age <= ceiling(max_age) && updated_long_newcodes$visit_age > ceiling(min_age)))
+      
+      # Concatenate a column with the age
+      
     }
   }
-  age_bin_data <- append(age_bin_data, temp_df)
+  
+  # Write each set of age data to its own csv
+  write.csv(temp_df, file = out_path)
 }
-
-# Finally, convert the age bin data to a data frame itself. Note that the
-# age bin column represents the ceiling of the age bin (i.e. "8" represents
-# all subject data where the subject's age is from 7 to 8, exclude-7 and
-# include-8). The I() function allows this.
-# NOTE: the below does not currently work. Likely requires usage of data.table library. currently researching this.
-age_bin_data <- data.frame(Bin = ceiling(min_age), to = ceiling(max_age), Data = I(age_bin_data))
 
 
 
