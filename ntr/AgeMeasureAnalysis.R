@@ -39,7 +39,7 @@ max_age <- max(as.numeric(updated_metadata$visit_age))
 # ages are unknown (i.e. only keeps rows in updated_long_newcodes whose "subj"
 # entry is also present in the updated_metadata)
 updated_long_newcodes <- long_newcodes_data %>%
-  filter(subj %in% updated_metadata$subj)
+    filter(subj %in% updated_metadata$subj)
 
 # For wide_newcodes_data, first prepend a column with all subject IDs (the
 # data is already sorted in ascending subject ID order). Then filter.
@@ -67,26 +67,55 @@ dir.create("age_data")
 # The below should be wrapped into a function returning a list of data frames, representing
 # each age bin. The resultant list should then be passed into get_word_age_accuracies() below
 # whenever it is called. 
-for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
-    print("age")
-    print(age)
-    temp_df <- data.frame()
-    out_path <- paste0("age_data/bin_", age - 1, ".csv")
-    # Iterate through all subjects
-    for (subject in updated_metadata$subj) {
-            # If that subject is within the desired range
-            if (!is.na(updated_metadata[subject, "visit_age"]) &&
-                as.numeric(updated_metadata[subject, "visit_age"]) > (age - 1) && 
-                as.numeric(updated_metadata[subject, "visit_age"]) <= age) {
+
+# Takes in some metadata with at least columns representing subjects and their
+# visit ages; data for subjects in "long" format (see ROAR long data files
+# for the formatting), and a min and max integer age for which to generate
+# bin data.
+# Outputs a list of data frames, each representing the data for the respective
+# one-year age bin. 
+get_long_bin_data <- function(metadata, long_data, min_age, max_age) {
+    bin_list = list()
+
+    for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
+        temp_df <- data.frame()
+        # This should be phased out later for all of the csv generations when
+        # calling this function
+        # out_path <- paste0("age_data/bin_", age - 1, ".csv")
+        # Iterate through all subjects
+        for (subject in metadata$subj) {
+                # If that subject is within the desired range
+            if (!is.na(metadata[subject, "visit_age"]) &&
+                as.numeric(metadata[subject, "visit_age"]) > (age - 1) && 
+                as.numeric(metadata[subject, "visit_age"]) <= age) {
                 # Add all of their data to the data frame
-                temp_df <- rbind(temp_df, subset(updated_long_newcodes, 
-                    visit_age == updated_metadata[subject, "visit_age"]))
+                temp_df <- rbind(temp_df, subset(long_data, 
+                    visit_age == metadata[subject, "visit_age"]))
             }
+        }
+        
+        bin_list <- append(bin_list, temp_df)
+        # Write each set of age data to its own csv
+        # write.csv(temp_df, file = out_path)
     }
-    
-    # Write each set of age data to its own csv
-    write.csv(temp_df, file = out_path)
+
+    # Return a three-tuple whose first entry is the lower end of the age range,
+    # organized by naming convention, the second is the max age, and 
+    # the list of age bin data.
+    return(list(ceiling(min_age) - 1, ceiling(max_age) - 1, bin_list))
 }
+
+# Takes in age data given by get_long_bin_data and outputs each bin to a csv.
+output_long_bin_data <- function(long_bin_data) {
+    # Iterate through all of the bins
+    print(long_bin_data[0]:long_bin_data[1])
+    for (i in long_bin_data[0]:long_bin_data[1]) {
+        print(i)
+    }
+}
+
+output_long_bin_data(get_long_bin_data(updated_metadata, updated_long_newcodes, min_age, max_age))
+
 
 # Next, we can compute the averages for each word for each age bin, 
 # based on all of the data across age bins
@@ -124,3 +153,5 @@ get_word_age_accuracies <- function(word_statistics, min_age, max_age) {
 for word in word_statistics (would need to get this)
     compute that accuracy by summing all of the 1s/0s for accuracy for that word in the age bin, and divide by the number of them that there are
     can do something similar for response times
+
+# Running all code
