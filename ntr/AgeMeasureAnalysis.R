@@ -2,10 +2,10 @@ library(tidyverse)
 library(dplyr)
 
 # Desktop
-# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
 # Laptop
-setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
+# setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
 
 # Load in original required data
 metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
@@ -61,8 +61,13 @@ updated_long_newcodes <- merge(updated_long_newcodes, updated_metadata[, c("subj
 # Data is exported to csv's for each age bin. Named based on lower bound
 # (i.e. bin_7.csv refers to ages (7:8])
 dir.create("age_data")
-# Note below is broken again (adds all subjects to everything)
+
+# The below should be wrapped into a function returning a list of data frames, representing
+# each age bin. The resultant list should then be passed into get_word_age_accuracies() below
+# whenever it is called. 
 for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
+  print("age")
+  print(age)
   temp_df <- data.frame()
   out_path <- paste0("age_data/bin_", age - 1, ".csv")
   # Iterate through all subjects
@@ -72,11 +77,7 @@ for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
                as.numeric(updated_metadata[subject, "visit_age"]) > (age - 1) && 
                as.numeric(updated_metadata[subject, "visit_age"]) <= age) {
       # Add all of their data to the data frame
-      # broken in this line, needs to be fixed
-      temp_df <- rbind(temp_df, subset(updated_long_newcodes, updated_long_newcodes$visit_age <= ceiling(max_age) && updated_long_newcodes$visit_age > ceiling(min_age)))
-      
-      # Concatenate a column with the age
-      
+      temp_df <- rbind(temp_df, subset(updated_long_newcodes, visit_age == updated_metadata[subject, "visit_age"]))
     }
   }
   
@@ -84,6 +85,35 @@ for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
   write.csv(temp_df, file = out_path)
 }
 
+### Next, we can compute the averages for each word for each age bin, based on all of the data across age bins ###
 
+# Read in the word statistics
+word_statistics <- read.csv("data_allsubs/wordStatistics.csv")
 
+# This function returns a data frame whose rows are words/pseudowords and whose columns are different age bins,
+# and whose cells correspond to the average accuracy for that word/pseudoword within the age bin. If there is no
+# data for a word-bin pairing, is filled with NA.
+# Takes in a data frame of word statistics, the minimum age for a bin, and the maximum age for bins.
+get_word_age_accuracies <- function(word_statistics, min_age, max_age) {
+  # Create a vector of age bins from 7 to 28
+  age_bins <- (ceiling(min_age)-1):(ceiling(max_age)-1)
+  
+  # Create an empty data frame with words as rows and age bins as columns
+  word_age_accuracies <- data.frame(word = word_statistics$STRING, stringsAsFactors = FALSE)
+  
+  # Add columns for each age bin and initialize them with empty values
+  for (age in age_bins) {
+    bin_col <- paste("bin_", age, sep = "")
+    word_age_accuracies[, bin_col] <- ""
+  }
+  
+  # Iterate through all of the words, now in word_age_accuracies, and, iterating through all instances of that word
+  # in a given age bin, sum the accuracies (0/1) and ultimately divide by the number of occurrences
+  # to obtain the average for that word for that age bin.
+  for word 
+}
 
+# make a list of accuracy averages for each age bin for that word
+for word in word_statistics (would need to get this)
+  compute that accuracy by summing all of the 1s/0s for accuracy for that word in the age bin, and divide by the number of them that there are
+  can do something similar for response times
