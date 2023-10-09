@@ -3,10 +3,10 @@ library(dplyr)
 
 # Set directory to the root directory of the project folder
 # Desktop
-setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
 # Laptop
-# setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
+setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
 
 # Load in original required data
 metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
@@ -63,11 +63,7 @@ updated_long_newcodes <- merge(updated_long_newcodes,
 # The data recorded is based on the updated_long_newcodes dataframe.
 # Data is exported to csv's for each age bin. Named based on lower bound
 # (i.e. bin_7.csv refers to ages (7:8])
-dir.create("age_data")
 
-# The below should be wrapped into a function returning a list of data frames, representing
-# each age bin. The resultant list should then be passed into get_word_age_accuracies() below
-# whenever it is called. 
 
 # Takes in some metadata with at least columns representing subjects and their
 # visit ages; data for subjects in "long" format (see ROAR long data files
@@ -75,6 +71,9 @@ dir.create("age_data")
 # bin data.
 # Outputs a list of data frames, each representing the data for the respective
 # one-year age bin. 
+# This needs to be converted to a function that returns individual age bin
+# data frames for a specific age, when passed in this information.
+# Lists of data frames are improperly formatted.
 get_long_bin_data <- function(metadata, long_data, min_age, max_age) {
     bin_list = list()
 
@@ -82,7 +81,7 @@ get_long_bin_data <- function(metadata, long_data, min_age, max_age) {
         temp_df <- data.frame()
         # This should be phased out later for all of the csv generations when
         # calling this function
-        # out_path <- paste0("age_data/bin_", age - 1, ".csv")
+        # out_path <- paste0("age_data/bin_", age - 1, ".csv") # nolint
         # Iterate through all subjects
         for (subject in metadata$subj) {
                 # If that subject is within the desired range
@@ -96,28 +95,33 @@ get_long_bin_data <- function(metadata, long_data, min_age, max_age) {
         }
         
         bin_list <- append(bin_list, temp_df)
-        # Write each set of age data to its own csv
-        # write.csv(temp_df, file = out_path)
     }
 
     # Return a three-tuple whose first entry is the lower end of the age range,
     # organized by naming convention, the second is the max age, and 
     # the list of age bin data.
-    return(list(ceiling(min_age) - 1, ceiling(max_age) - 1, bin_list))
+    return(bin_list)
 }
 
 # Takes in age data given by get_long_bin_data and outputs each bin to a csv.
-output_long_bin_data <- function(long_bin_data) {
+output_long_bin_data <- function(long_bin_data, min_age, max_age) {
+    # Create a directory for storing the age data
+    if (!file.exists("age_data")) {
+        dir.create("age_data")
+    }
+
     # Iterate through all of the bins
-    print(long_bin_data[0]:long_bin_data[1])
-    for (i in long_bin_data[0]:long_bin_data[1]) {
-        print(i)
+    # Output the bins to csv's, named accordingly (note that all bins are
+    # named in accordance with the lower age bound - 1)
+    for (age in seq(from = ceiling(min_age), to = ceiling(max_age), by = 1)) {
+        temp_df <- long_bin_data[age - ceiling(min_age) + 1]
+        out_path <- paste0("age_data/bin_", age - 1, ".csv")
+        write.csv(temp_df, file = out_path)
     }
 }
 
-temp <- get_long_bin_data(updated_metadata, updated_long_newcodes, min_age, max_age)
-
-output_long_bin_data(get_long_bin_data(updated_metadata, updated_long_newcodes, min_age, max_age))
+output_long_bin_data(get_long_bin_data(updated_metadata, 
+    updated_long_newcodes, min_age, max_age), min_age, max_age)
 
 
 # Next, we can compute the averages for each word for each age bin, 
