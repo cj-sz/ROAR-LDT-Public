@@ -43,6 +43,7 @@ updated_long_newcodes <- long_newcodes_data %>%
 
 # For wide_newcodes_data, first prepend a column with all subject IDs (the
 # data is already sorted in ascending subject ID order). Then filter.
+# Note that there are only 120 (non-outlier) subjects in the data.
 subj <- 1:120
 updated_wide_newcodes <- data.frame(subj, wide_newcodes_data) %>%
     filter(subj %in% updated_metadata$subj)
@@ -113,6 +114,8 @@ output_long_bin_data <- function(long_bin_data) {
         print(i)
     }
 }
+
+temp <- get_long_bin_data(updated_metadata, updated_long_newcodes, min_age, max_age)
 
 output_long_bin_data(get_long_bin_data(updated_metadata, updated_long_newcodes, min_age, max_age))
 
