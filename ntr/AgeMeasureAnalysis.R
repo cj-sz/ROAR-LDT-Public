@@ -131,7 +131,7 @@ get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistic
 
             # Print progress at the end of each age bin:
             message <- sprintf("IN PROGRESS: Age bin %3d of %3d in word %3d of %3d.\r",
-                    age, ncol(word_age_averages) - 1, completed, word_count)
+                    age - 5, ncol(word_age_averages) - 1, completed, word_count)
             cat(message)
         }
 
