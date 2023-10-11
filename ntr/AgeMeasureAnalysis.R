@@ -72,52 +72,66 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
     }
 }
 
-# Returns a data frame whose rows are words and whose columns represent the
-# average accuracy for the subjects in the respective age bin (where the names
-# of the columns are age bins following the same convention as above) for the
-# given word.
+# Returns a data frame whose words are rows/pseudowords and whose columns are
+# different age bins. Each entry is the average for the respective statistic
+# (as determined by the value passed to "data_type").
 # Takes in data in the "long" format, metadata for subject ages, a data frame
 # of word statistics based on the wordStatistics csv where each word is
 # listed once, and the minimum and maximum age of the subjects in the data set.
-get_word_age_accuracies <- function(long_data, metadata, word_statistics, min_age, max_age) {
+# The first parameter denotes the type of data to be returned; right now,
+# accuracy and response time are supported (denoted "acc" and "rt" in accordance
+# with the names of the columns.
+get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistics, min_age, max_age) {
     # Create a vector of age bins the min_age to the max_age of the dataset
     age_bins <- (ceiling(min_age)-1):(ceiling(max_age)-1)
     
     # Create an empty data frame with words as rows and age bins as columns
-    word_age_accuracies <- data.frame(word = word_statistics$STRING, 
+    word_age_averages <- data.frame(word = word_statistics$STRING, 
         stringsAsFactors = FALSE)
     
     # Add columns for each age bin and initialize them with empty values
     for (age in age_bins) {
         bin_col <- as.character(age)
-        word_age_accuracies[, bin_col] <- NA
+        word_age_averages[, bin_col] <- NA
     }
-    
-    # Iterate through all of the words, now in word_age_accuracies, and, 
-    # iterating through all instances of that word in a given age bin, sum the 
-    # accuracies (0/1) and ultimately divide by the number of occurrences
-    # to obtain the average for that word for that age bin.
     
     # Progress counters:
     completed <- 1
     word_count <- nrow(word_statistics)
-    for (word in word_age_accuracies$word) {
+
+    # Iterate through all of the words, now in word_age_averages, and, 
+    # iterating through all instances of that word in a given age bin, sum the 
+    # accuracies (0/1) and ultimately divide by the number of occurrences
+    # to obtain the average for that word for that age bin.
+    for (word in word_age_averages$word) {
         for (age in age_bins) {
             # Get the data for that age
             age_data <- get_long_bin_data(metadata, long_data, age)
 
-            # Get all the accuracies in the bin for the given word
-            accs <- age_data$acc[age_data$word == word]
+            # Only operate if there is data to operate on (for efficiency)
+            # TODO: Allow for any data to be gleaned from the set as long as
+            # the passed in column name (to the data_type parameter) is valid,
+            # and its entries are numbers.
+            # For now, only accuracy and response time are supported.
+            if (nrow(age_data) != 0) {
+                # Get all the relevant statistics for the given word
+                if (data_type == "acc") {
+                    temp <- age_data$acc[age_data$word == word]
+                } else if (data_type == "rt") {
+                    temp <- age_data$rt[age_data$word == word]
+                }
 
-            # Set the average in word_age_accuracies based on the bin
-            # This will throw a warning when an element of accs is NA, so ignore it
-            suppressWarnings({
-                word_age_accuracies[word_age_accuracies$word == word, as.character(age)] <- mean(accs)
-            })
+                # Set the average in word_age_averages based on the bin
+                # This will throw a warning when an element of accs is NA, so 
+                # ignore it
+                suppressWarnings({
+                    word_age_averages[word_age_averages$word == word, as.character(age)] <- mean(temp)
+                })
+            }
 
             # Print progress at the end of each age bin:
             message <- sprintf("IN PROGRESS: Age bin %3d of %3d in word %3d of %3d.\r",
-                    age, ncol(word_age_accuracies) - 1, completed, word_count)
+                    age, ncol(word_age_averages) - 1, completed, word_count)
             cat(message)
         }
 
@@ -129,8 +143,8 @@ get_word_age_accuracies <- function(long_data, metadata, word_statistics, min_ag
     cat("\n")
     cat("Completed ", completed - 1, " of ", word_count, " words.\n")
 
-    # Ultimately return the accuracies dataframe
-    return(word_age_accuracies)
+    # Ultimately return the averages
+    return(word_age_averages)
 }
 
 ### SCRIPTING ###
@@ -173,4 +187,11 @@ output_long_bin_data(updated_long_newcodes, updated_metadata, min_age, max_age)
 word_statistics <- read.csv("data_allsubs/wordStatistics.csv")
 
 # Get the accuracies for each word and age group.
-average_word_age_accuracies <- get_word_age_accuracies(updated_long_newcodes, updated_metadata, word_statistics, min_age, max_age)
+average_word_age_accuracies <- get_avg_word_age_data("acc", updated_long_newcodes, updated_metadata, word_statistics, min_age, max_age)
+
+# Get the average response times for each word and age group
+average_word_age_rt <- get_avg_word_age_data("rt", updated_long_newcodes, updated_metadata, word_statistics, min_age, max_age)
+
+# Write them both to a csv
+write.csv(average_word_age_accuracies, "age_data/average_word_age_accuracies.csv")
+write.csv(average_word_age_rt, "age_data/average_word_age_rt.csv")
