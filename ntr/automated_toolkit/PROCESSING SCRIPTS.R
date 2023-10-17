@@ -4,6 +4,7 @@ setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/ntr/automated_too
 #first: load the pg mapping libraries:
 require(readxl)
 
+# Different categorizations of words.
 word_initial_mappings <- read_excel("word initial mappings.xlsx")
 word_final_mappings <- read_excel("word final mappings.xlsx")
 syllable_medial_mappings <- read_excel("syllable medial mappings.xlsx")
@@ -13,9 +14,14 @@ syllable_initial_mappings <- read_excel("syllable initial mappings.xlsx")
 #second: load word list
 library(readr)
 
+# List of (currently) ~10700 words
 wordlist_v1_0 <- read_csv("wordlist_v1_0.csv")
 
 #third: load functions
+
+# TODO LATER: Explore this algorithm. Also interested in number of words that
+# correspond to the various ambiguities present.
+# Maps phoneme and grapheme data for a given spelling and pronunciation
 map_PG <- function(spelling,pronunciation,map_progress=FALSE){
   
   #required packages
@@ -1551,6 +1557,8 @@ map_PG <- function(spelling,pronunciation,map_progress=FALSE){
   
   return(list(all_words,cleared))
 }
+
+# Maps onset and rime data.
 map_OR <- function(spelling, pronunciation,map_progress=FALSE){
   
   library(stringi)
@@ -1639,6 +1647,8 @@ map_OR <- function(spelling, pronunciation,map_progress=FALSE){
   return(hold)
 }
 
+# After mapping, computes various relevant information; i.e. how many words
+# correspond to a certain mapping criteria.
 make_tables <- function(mapped_words){
   
   library(dplyr)
@@ -1738,6 +1748,14 @@ make_tables <- function(mapped_words){
   return(list(pg=pg,gp=gp,p_freq=phoneme_freq,g_freq=grapheme_freq,pg_freq=phoneme_grapheme_freq))
 }
 
+## Useful Helper Functions ##
+
+# Takes in a list of spellings and pronunciations, and a specific level of
+# evaluation (currently supports phoneme/grapheme and onset/rime, in accordance
+# with the above functions), and the tables from above. Applies either map_PG
+# or map_OR depending on what is specified. "tables" corresponds to the relevant
+# table (should be the result of calling map_PG or map_OR, respectively,
+# on all of the words in the corpus.)
 map_value <- function(spelling, pronunciation, level, tables) {
   
   pb = txtProgressBar(min = 0, max = length(spelling), initial = 0) 
@@ -1796,6 +1814,10 @@ map_value <- function(spelling, pronunciation, level, tables) {
   
   return(mylist)
 }
+
+# Reutrns a list of words that correspond to a certain (or any) phoneme and
+# grapheme in a given position. Requires a list of words that have been returned
+# from map_value.
 word_pattern <- function(mapped_words, phoneme, grapheme, position) {
   
   #all for one thing to be "any" -- set up scenarios for what to do based on indices, e.g., any phoneme == scenario 1 . scenario 4 is for fully specified requests
@@ -1868,6 +1890,8 @@ word_pattern <- function(mapped_words, phoneme, grapheme, position) {
   
   return(matrix(matching_words))
 }
+
+# Returns phoneme/grapheme probabilities for a list of words.
 summarize_words <- function(mapped_words,parameter){
   
   mystats <- matrix(nrow=length(mapped_words),ncol=7)
@@ -1902,7 +1926,12 @@ summarize_words <- function(mapped_words,parameter){
   return(mystats)
 }
 
+## SCRIPTING ##
+
 #fourth: map all the words at both levels
+# NOTE: The below operations take a long time. Only necessary if need to create
+# entirely new sets for a new corpus. The results of these already exist in the
+# directory.
 all_words_PG <- map_PG(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
 all_words_OR <- map_OR(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
 

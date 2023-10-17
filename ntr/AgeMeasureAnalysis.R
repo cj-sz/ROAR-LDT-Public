@@ -55,8 +55,8 @@ get_long_bin_data <- function(metadata, long_data, age_bin) {
 # above.
 output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
     # Create a directory for storing the age data
-    if (!file.exists("age_data")) {
-        dir.create("age_data")
+    if (!file.exists("ntr/age_data")) {
+        dir.create("ntr/age_data")
     }
 
     # For each age bin in the range passed in
@@ -65,7 +65,7 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
         temp_df <- get_long_bin_data(metadata, long_bin_data, age - 1)
 
         # Set the write path to be named corresponding to the age bin
-        out_path <- paste0("age_data/bin_", age - 1, ".csv")
+        out_path <- paste0("ntr/age_data/bin_", age - 1, ".csv")
 
         # Write the data to the file
         write.csv(temp_df, file = out_path)
@@ -193,5 +193,10 @@ average_word_age_accuracies <- get_avg_word_age_data("acc", updated_long_newcode
 average_word_age_rt <- get_avg_word_age_data("rt", updated_long_newcodes, updated_metadata, word_statistics, min_age, max_age)
 
 # Write them both to a csv
-write.csv(average_word_age_accuracies, "age_data/average_word_age_accuracies.csv")
-write.csv(average_word_age_rt, "age_data/average_word_age_rt.csv")
+write.csv(average_word_age_accuracies, "ntr/age_data/average_word_age_accuracies.csv")
+write.csv(average_word_age_rt, "ntr/age_data/average_word_age_rt.csv")
+
+# Next we are interested in getting the average accuracy and response time data
+# for the different age bins for all words corresponding to a certain
+# phoneme/grapheme in a position, onset/rime, etc. Use PROCESSING SCRIPTS.R from
+# ntr/automated_toolkit directory.
