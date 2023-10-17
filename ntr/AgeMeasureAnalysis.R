@@ -10,8 +10,8 @@ setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
 # Load in original required data
 metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
-long_newcodes_data = read.csv("data_allsubs/LDT_alldata_long_newcodes.csv")
-wide_newcodes_data = read.csv("data_allsubs/LDT_alldata_wide_newcodes.csv")
+long_newcodes_data <- read.csv("data_allsubs/LDT_alldata_long_newcodes.csv")
+wide_newcodes_data <- read.csv("data_allsubs/LDT_alldata_wide_newcodes.csv")
 
 ### DEFINE USEFUL FUNCTIONS USED IN THE SCRIPT FILE BELOW ###
 
@@ -41,7 +41,7 @@ get_long_bin_data <- function(metadata, long_data, age_bin) {
             as.numeric(metadata[subject, "visit_age"]) <= age_bin + 1) {
             # Add all of their data to the data frame
             bin <- rbind(bin, subset(long_data, 
-                visit_age == metadata[subject, "visit_age"]))
+                visit_age == metadata[subject, "visit_age"])) # nolint
         }
     }
 
