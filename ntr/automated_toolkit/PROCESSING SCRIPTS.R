@@ -17,7 +17,7 @@ library(readr)
 # List of (currently) ~10700 words
 wordlist_v1_0 <- read_csv("wordlist_v1_0.csv")
 
-#third: load functions
+# third: load functions
 
 # TODO LATER: Explore this algorithm. Also interested in number of words that
 # correspond to the various ambiguities present.
