@@ -1,0 +1,80 @@
+---
+title: "PG Toolkit version 1.1"
+author: "Robert W. Wiley & Sartaj Singh"
+date: "2023-10-29"
+output: html_document
+---
+
+# Set up & clear environment
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Install and load packages
+```{r, warning=FALSE}
+if(!require("readxl")) install.packages("readxl")
+if(!require("readr")) install.packages("readr")
+if(!require("stringr")) install.packages("stringr")
+if(!require("stringi")) install.packages("stringi")
+if(!require("dplyr")) install.packages("dplyr")
+if(!require("tidyr")) install.packages("tidyr")
+```
+
+# Load data
+```{r}
+load("PG Toolkit v1.1.RData")
+```
+
+# Examples of summarizing measures for words in the version 1.1 corpus
+```{r function summarize_words() examples}
+##view Spelling Consistency measures (parameter = "PG") at the phonographeme level (scored_words_PG) for the word "penguin"
+summarize_words(scored_words = scored_words_PG[which(wordlist_v1_1$spelling=="penguin")], parameter = "PG")
+
+##view Reading Consistency measures (parameter = "GP") at the onset/rime level (scored_words_OR) for the word "penguin"
+summarize_words(scored_words = scored_words_OR[which(wordlist_v1_1$spelling=="penguin")], parameter = "GP")
+
+##create a table with the Phonographeme Frequency measures (parameter = "PG_freq") for all words at the phonographeme level (scored_words_PG)
+all_words_PG_freq <- summarize_words(scored_words = scored_words_PG, parameter = "PG_freq")
+head(all_words_PG_freq)
+```
+# Examples of exploring word patterns in the version 1.1 corpus
+```{r function map_values() examples}
+##view words with "any" pronunciation of the grapheme "ho" in the word initial ("wi") position
+word_pattern(scored_words_PG,"any","ho","wi")
+
+##view words with the "k" pronunciation of the grapheme "cch" in the "any" position
+word_pattern(scored_words_PG,"k","cch","any")
+
+##view words with the phonological rhyme "ut" spelled "any" way in the word final ("wf") position
+word_pattern(scored_words_OR,phoneme = "ut", grapheme = "any", position = "wf")
+```
+# How to score any list of words, including pseudowords
+```{r function map_value() examples}
+
+##type in a single word to be scored at the phonographeme level:
+map_value(spelling = "crunchy", pronunciation = "kr^nCi", level = "PG", tables = all_tables_PG)
+
+##type in a single word to be scored at the onset/rime level:
+map_value(spelling = "crunchy", pronunciation = "kr^nCi", level = "OR", tables = all_tables_OR)
+
+##load a list of words: first column = spellings, second column = pronunciations (must use in-house phonological transcriptions)
+pseudo_examples <- read_excel("pseudo_examples.xlsx")
+head(pseudo_examples) 
+
+#score the words at the phonographeme ("PG") level; note tables = all_tables_PG
+scored_pseudos_PG <- map_value(spelling = pseudo_examples$spelling, pronunciation = pseudo_examples$pronunciation, 
+                               level = "PG", tables = all_tables_PG)
+
+#view the detailed results for the fourth word
+scored_pseudos_PG[[4]]
+
+#score the words at the onset/rime ("OR") level; note tables = all_tables_OR
+scored_pseudos_OR <- map_value(spelling = pseudo_examples$spelling, pronunciation = pseudo_examples$pronunciation, 
+                               level = "OR", tables = all_tables_OR)
+
+#summarize the Spelling Consistency (parameter = "PG") of all the words at the onset/rime level
+summarize_words(scored_pseudos_OR, parameter = "PG") #"phloque" and "flowk" return NA's because their rimes (-oque and -owk) are unattested
+```
+
+

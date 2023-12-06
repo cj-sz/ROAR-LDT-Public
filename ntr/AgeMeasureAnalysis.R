@@ -1,6 +1,9 @@
 library(tidyverse)
 library(dplyr)
 
+# Grab the automated pg toolkit functionss
+source("automated-toolkit/automated-toolkit-OLD/PROCESSING-SCRIPTS.R")
+
 # Set directory to the root directory of the project folder
 # Desktop
 setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
@@ -9,7 +12,7 @@ setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 # setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
 
 # Load in original required data
-metadata = read.csv("data_allsubs/metadata_all_newcodes.csv")
+metadata <- read.csv("data_allsubs/metadata_all_newcodes.csv")
 long_newcodes_data <- read.csv("data_allsubs/LDT_alldata_long_newcodes.csv")
 wide_newcodes_data <- read.csv("data_allsubs/LDT_alldata_wide_newcodes.csv")
 
