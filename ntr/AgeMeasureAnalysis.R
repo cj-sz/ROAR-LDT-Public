@@ -1,12 +1,12 @@
 library(tidyverse)
 library(dplyr)
 
-# Grab the automated pg toolkit functionss
-source("automated-toolkit/automated-toolkit-OLD/PROCESSING-SCRIPTS.R")
-
 # Set directory to the root directory of the project folder
 # Desktop
 setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+
+# Grab the automated pg toolkit functionss
+source("C:/Users/Caleb Solomon/Documents/Github/ROAR-LDT-Public/ntr/automated-toolkit/automated-toolkit-OLD/PROCESSING-SCRIPTS.R")
 
 # Laptop
 # setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")

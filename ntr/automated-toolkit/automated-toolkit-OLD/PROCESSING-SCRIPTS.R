@@ -1,21 +1,34 @@
 ###TO PROCESS WORDS
 # DESKTOP
-setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/ntr/automated_toolkit")
+# uncomment this if running this file as standalone.
+# AgueMeasureAnalysis uses the code in this file (accessed through source(); if
+# using that script, this needs to be commented
+# setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public/ntr/automated_toolkit")
+
 #first: load the pg mapping libraries:
 require(readxl)
 
 # Different categorizations of words.
-word_initial_mappings <- read_excel("word initial mappings.xlsx")
-word_final_mappings <- read_excel("word final mappings.xlsx")
-syllable_medial_mappings <- read_excel("syllable medial mappings.xlsx")
-syllable_final_mappings <- read_excel("syllable final mappings.xlsx")
-syllable_initial_mappings <- read_excel("syllable initial mappings.xlsx")
+# Uncomment this if using this file as standalone. Otherwise need the path.
+# word_initial_mappings <- read_excel("word initial mappings.xlsx")
+# word_final_mappings <- read_excel("word final mappings.xlsx")
+# syllable_medial_mappings <- read_excel("syllable medial mappings.xlsx")
+# syllable_final_mappings <- read_excel("syllable final mappings.xlsx")
+# syllable_initial_mappings <- read_excel("syllable initial mappings.xlsx")
+
+path <- paste("ntr/automated-toolkit/automated-toolkit-OLD/")
+word_initial_mappings <- read_excel(paste0(path, "word initial mappings.xlsx"))
+word_final_mappings <- read_excel(paste0(path, "word final mappings.xlsx"))
+syllable_medial_mappings <- read_excel(paste0(path, "syllable medial mappings.xlsx"))
+syllable_final_mappings <- read_excel(paste0(path, "syllable final mappings.xlsx"))
+syllable_initial_mappings <- read_excel(paste0(path, "syllable initial mappings.xlsx"))
 
 #second: load word list
 library(readr)
 
 # List of (currently) ~10700 words
-wordlist_v1_0 <- read_csv("wordlist_v1_0.csv")
+# Remove path if using this file as standalone
+wordlist_v1_0 <- read_csv(paste0(path, "wordlist_v1_0.csv"))
 
 # third: load functions
 
@@ -1928,30 +1941,33 @@ summarize_words <- function(mapped_words,parameter){
 
 ## SCRIPTING ##
 
+# Comment all of this if using AgeMeasureAnalysis (i.e. when sourced, only want
+# to load the functions for their functionality)
+
 #fourth: map all the words at both levels
 # NOTE: The below operations take a long time. Only necessary if need to create
 # entirely new sets for a new corpus. The results of these already exist in the
 # directory.
-all_words_PG <- map_PG(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
-all_words_OR <- map_OR(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
+# all_words_PG <- map_PG(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
+# all_words_OR <- map_OR(spelling=wordlist_v1_0$spelling,pronunciation = wordlist_v1_0$pronunciation, map_progress = TRUE)
 
 #fifth: create PG and OR tables, given those mapped words
-all_tables_PG <- make_tables(all_words_PG)
-all_tables_OR <- make_tables(all_words_OR)
+# all_tables_PG <- make_tables(all_words_PG)
+# all_tables_OR <- make_tables(all_words_OR)
 
 #sixth: score all the words, given the mappings and tables
-scored_words_PG <- map_value(spelling = wordlist_v1_0$spelling, pronunciation = wordlist_v1_0$pronunciation, level = "PG", tables = all_tables_PG)
-scored_words_OR <- map_value(spelling = wordlist_v1_0$spelling, pronunciation = wordlist_v1_0$pronunciation, level = "OR", tables = all_tables_OR)
+# scored_words_PG <- map_value(spelling = wordlist_v1_0$spelling, pronunciation = wordlist_v1_0$pronunciation, level = "PG", tables = all_tables_PG)
+# scored_words_OR <- map_value(spelling = wordlist_v1_0$spelling, pronunciation = wordlist_v1_0$pronunciation, level = "OR", tables = all_tables_OR)
 
 #examples of extracting information
-summarize_words(mapped_words = scored_words_PG[which(wordlist_v1_0$spelling=="penguin")], parameter = "PG")
+# summarize_words(mapped_words = scored_words_PG[which(wordlist_v1_0$spelling=="penguin")], parameter = "PG")
 
-all_words_PG_probability <- summarize_words(mapped_words = scored_words_PG, parameter = "PG")
-head(all_words_PG_probability)
+# all_words_PG_probability <- summarize_words(mapped_words = scored_words_PG, parameter = "PG")
+# head(all_words_PG_probability)
 
-all_words_OR_GP_probability <- summarize_words(mapped_words = scored_words_OR, parameter = "GP")
-head(all_words_OR_GP_probability)
+# all_words_OR_GP_probability <- summarize_words(mapped_words = scored_words_OR, parameter = "GP")
+# head(all_words_OR_GP_probability)
 
-word_pattern(scored_words_PG,"any","ho","wi")
+# word_pattern(scored_words_PG,"any","ho","wi")
 
-word_pattern(scored_words_OR,"8n","any","wf")
+# word_pattern(scored_words_OR,"8n","any","wf")
