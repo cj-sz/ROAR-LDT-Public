@@ -5,8 +5,11 @@ library(dplyr)
 # Desktop
 setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
 
-# Grab the automated pg toolkit functionss
-source("C:/Users/Caleb Solomon/Documents/Github/ROAR-LDT-Public/ntr/automated-toolkit/automated-toolkit-OLD/PROCESSING-SCRIPTS.R")
+# Grab the automated pg toolkit functions
+load("ntr/automated-toolkit/version 1.1/automated toolkit/PG Toolkit v1.1.RData")
+
+# Old versions
+# source("C:/Users/Caleb Solomon/Documents/Github/ROAR-LDT-Public/ntr/automated-toolkit/automated-toolkit-OLD/PROCESSING-SCRIPTS.R")
 
 # Laptop
 # setwd("C:/Users/cjsol/Documents/GitHub/ROAR-LDT-Public")
@@ -34,7 +37,7 @@ round_list <- function(list, digits) {
 # Age data is retrieved from the passed in metadata file data frame.
 get_long_bin_data <- function(metadata, long_data, age_bin) {
     # Create the data frame
-    bin = data.frame()
+    bin <- data.frame()
 
     # Go through all subjects in the metadata
     for (subject in metadata$subj) {
@@ -85,7 +88,7 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
 # accuracy and response time are supported (denoted "acc" and "rt" in accordance
 # with the names of the columns.
 get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistics, min_age, max_age) {
-    # Create a vector of age bins the min_age to the max_age of the dataset
+    # Create a vector of age bins from the min_age to the max_age of the dataset
     age_bins <- (ceiling(min_age)-1):(ceiling(max_age)-1)
     
     # Create an empty data frame with words as rows and age bins as columns
@@ -201,5 +204,23 @@ write.csv(average_word_age_rt, "ntr/age_data/average_word_age_rt.csv")
 
 # Next we are interested in getting the average accuracy and response time data
 # for the different age bins for all words corresponding to a certain
-# phoneme/grapheme in a position, onset/rime, etc. Use PROCESSING SCRIPTS.R from
-# ntr/automated_toolkit directory.
+# phoneme/grapheme in a position, onset/rime, etc.
+
+# EXAMPLE: Get all the words with a certain phoneme/grapheme
+# Returns the subset of scoredPGwords whose corresponding words are present in the provided subset
+# This is super inefficient but the function itself should work.
+filter_subset <- function(scoredPGwords, subset) {
+    filtered_scored_words <- list()
+    for (data in scoredPGwords) {
+        for (i in 1:nrow(subset["STRING"])) {
+          if (data["spelling",][1] %in% subset["STRING"][i,]) {
+            print(i)
+            filtered_scored_words <- append(filtered_scored_words, data)
+            break
+          }
+        }
+    }
+    return(filtered_scored_words)
+}
+
+retdata <- filter_subset(scored_words_PG, word_statistics)

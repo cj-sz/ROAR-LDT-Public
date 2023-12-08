@@ -23,7 +23,7 @@ if(!require("tidyr")) install.packages("tidyr")
 
 # Load data
 ```{r}
-load("PG Toolkit v1.1.RData")
+load("ntr/automated-toolkit/version 1.1/automated toolkit/PG Toolkit v1.1.RData")
 ```
 
 # Examples of summarizing measures for words in the version 1.1 corpus
@@ -59,7 +59,7 @@ map_value(spelling = "crunchy", pronunciation = "kr^nCi", level = "PG", tables =
 map_value(spelling = "crunchy", pronunciation = "kr^nCi", level = "OR", tables = all_tables_OR)
 
 ##load a list of words: first column = spellings, second column = pronunciations (must use in-house phonological transcriptions)
-pseudo_examples <- read_excel("pseudo_examples.xlsx")
+pseudo_examples <- read_excel("ntr/automated-toolkit/version 1.1/automated toolkit/pseudo_examples.xlsx")
 head(pseudo_examples) 
 
 #score the words at the phonographeme ("PG") level; note tables = all_tables_PG
