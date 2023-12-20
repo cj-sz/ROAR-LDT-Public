@@ -78,6 +78,8 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
     }
 }
 
+# TODO merge this and the function below it to save time
+
 # Returns a data frame whose words are rows/pseudowords and whose columns are
 # different age bins. Each entry is the average for the respective statistic
 # (as determined by the value passed to "data_type").
@@ -89,24 +91,29 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
 # with the names of the columns.
 get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistics, min_age, max_age) {
     # Create a vector of age bins from the min_age to the max_age of the dataset
-    age_bins <- (ceiling(min_age)-1):(ceiling(max_age)-1)
-    
+    age_bins <- (ceiling(min_age) - 1):(ceiling(max_age) - 1)
+
     # Create an empty data frame with words as rows and age bins as columns
-    word_age_averages <- data.frame(word = word_statistics$STRING, 
-        stringsAsFactors = FALSE)
-    
+    word_age_averages <- data.frame(
+        word = word_statistics$STRING,
+        stringsAsFactors = FALSE
+    )
+
+    # TODO remove this statement
+    View(word_age_averages)
+
     # Add columns for each age bin and initialize them with empty values
     for (age in age_bins) {
         bin_col <- as.character(age)
         word_age_averages[, bin_col] <- NA
     }
-    
+
     # Progress counters:
     completed <- 1
     word_count <- nrow(word_statistics)
 
-    # Iterate through all of the words, now in word_age_averages, and, 
-    # iterating through all instances of that word in a given age bin, sum the 
+    # Iterate through all of the words, now in word_age_averages, and,
+    # iterating through all instances of that word in a given age bin, sum the
     # accuracies (0/1) and ultimately divide by the number of occurrences
     # to obtain the average for that word for that age bin.
     for (word in word_age_averages$word) {
@@ -128,7 +135,7 @@ get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistic
                 }
 
                 # Set the average in word_age_averages based on the bin
-                # This will throw a warning when an element of accs is NA, so 
+                # This will throw a warning when an element of accs is NA, so
                 # ignore it
                 suppressWarnings({
                     word_age_averages[word_age_averages$word == word, as.character(age)] <- mean(temp)
@@ -136,15 +143,17 @@ get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistic
             }
 
             # Print progress at the end of each age bin:
-            message <- sprintf("IN PROGRESS: Age bin %3d of %3d in word %3d of %3d.\r",
-                    age - 5, ncol(word_age_averages) - 1, completed, word_count)
+            message <- sprintf(
+                "IN PROGRESS: Age bin %3d of %3d in word %3d of %3d.\r",
+                age - 5, ncol(word_age_averages) - 1, completed, word_count
+            )
             cat(message)
         }
 
         # Update number of words completed
         completed <- completed + 1
     }
-    
+
     # Progress result
     cat("\n")
     cat("Completed ", completed - 1, " of ", word_count, " words.\n")
@@ -153,7 +162,53 @@ get_avg_word_age_data <- function(data_type, long_data, metadata, word_statistic
     return(word_age_averages)
 }
 
+
+# Takes in a pre-processed scored list of words (processed by map_values in the
+# PG Toolkit) and a list of words to grab (a list of strings). Outputs, in list
+# format, the data frames from scored_words (in the same pre-processed format)
+# corresponding to the input list of desired words.
+# Returns a list of data frames in the same format as processed by map_values in
+# the PG toolkit.
+#
+# Requires the PG Toolkit's functions to be loaded.
+get_scored_words <- function(scored_words, words) {
+    ret <- list()
+    for (i in 1:length(scored_words)) {
+        if (scored_words[[i]]["spelling", 1] %in% words) {
+            ret <- append(ret, list(scored_words[[i]]))
+        }
+    }
+    return(ret)
+}
+
+# Takes in a scored list of words pre-processed by the PG Toolkit's map_values
+# function, a desired phoneme, grapheme, and position, a list of words to summarize (a list of strings),
+# and a desired trait to summarize. (Expand on this documentation)
+# Calls the summarize_words function from the PG toolkit on all words present in
+# both the PG Toolkit's corpus as well as the ROAR's dataset, at the desired level
+# of evaluation (the passed in trait)
+#
+# Required the PG Toolkit's functions to be loaded.
+summarize_word_list <- function(scored_words, phoneme, grapheme, position, input_list, trait) {
+    # Takes in a list of scored words, a phoneme, a grapheme, and a position for them
+    # Outputs all words in the ROAR corpus that have been processed by the PG Toolkit
+    match <- word_pattern(scored_words, phoneme, grapheme, position)
+    if (length(match) == 0) {
+        print("No words in the corpus match the provided pattern.")
+    } else {
+        wordlist <- match[match %in% input_list]
+        if (length(wordlist)==0) {
+            print("No matching words with the given inputs are present in the input list.")
+        } else {
+            summarize_words(get_scored_words(scored_words, wordlist), trait)
+        }
+    }
+}
+
+
+#################
 ### SCRIPTING ###
+#################
 
 # Changing metadata to reflect age in years
 updated_metadata <- filter(metadata, !is.na(visit_age))
@@ -206,21 +261,14 @@ write.csv(average_word_age_rt, "ntr/age_data/average_word_age_rt.csv")
 # for the different age bins for all words corresponding to a certain
 # phoneme/grapheme in a position, onset/rime, etc.
 
-# EXAMPLE: Get all the words with a certain phoneme/grapheme
-# Returns the subset of scoredPGwords whose corresponding words are present in the provided subset
-# This is super inefficient but the function itself should work.
-filter_subset <- function(scoredPGwords, subset) {
-    filtered_scored_words <- list()
-    for (data in scoredPGwords) {
-        for (i in 1:nrow(subset["STRING"])) {
-          if (data["spelling",][1] %in% subset["STRING"][i,]) {
-            print(i)
-            filtered_scored_words <- append(filtered_scored_words, data)
-            break
-          }
-        }
-    }
-    return(filtered_scored_words)
-}
+# Example of getting a single word corresponding to a given phoneme, grapheme, and position,
+# from the PG Toolkit
+ret <- word_pattern(scored_words_OR, phoneme = "any", grapheme = "int", position = "wf")
 
-retdata <- filter_subset(scored_words_PG, word_statistics)
+# Summarize all of the words present in the ROAR data that also correspond to the
+# desired input mappings.
+#
+# The only thing to do now is to replace this with the desired phoneme/grapheme/position mappings and the proper input scored word list and trait!
+summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "en", position = "wf", input_list = word_statistics$STRING, trait = "PG")
+summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "a_ek", position = "wf", input_list = word_statistics$STRING, trait = "PG")
+summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "any", position = "sf", input_list = word_statistics$STRING, trait = "PG")
