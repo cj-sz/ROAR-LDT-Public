@@ -189,9 +189,13 @@ get_scored_words <- function(scored_words, words) {
 # of evaluation (the passed in trait)
 #
 # Required the PG Toolkit's functions to be loaded.
-summarize_word_list <- function(scored_words, phoneme, grapheme, position, input_list, trait) {
+# Requires age data to exist in csv's in the proper location, ~/ntr/age_data
+summarize_word_list <- function(scored_words, phoneme, grapheme, position, input_list, trait, min_age, max_age) {
     # Takes in a list of scored words, a phoneme, a grapheme, and a position for them
     # Outputs all words in the ROAR corpus that have been processed by the PG Toolkit
+    # Outputs corresponding ROAR data to a csv located in ~/ntr/summarized_ROAR_words
+    # containing all trials with the respective words matching the input criteria that
+    # are also in the ROAR set, in the given range of ages [min_age, max_age)
     match <- word_pattern(scored_words, phoneme, grapheme, position)
     if (length(match) == 0) {
         print("No words in the corpus match the provided pattern.")
@@ -201,6 +205,39 @@ summarize_word_list <- function(scored_words, phoneme, grapheme, position, input
             print("No matching words with the given inputs are present in the input list.")
         } else {
             summarize_words(get_scored_words(scored_words, wordlist), trait)
+            # Output the csv's
+            if (!file.exists("ntr/summarized_ROAR_words")) {
+                dir.create("ntr/summarized_ROAR_words")
+            }
+            temp <- data.frame()
+            for (i in floor(min_age):ceiling(max_age)) {
+                fn <- paste("ntr/age_data/bin_", i, ".csv", sep = "")
+                if (file.exists(fn)) {
+                    tryCatch(
+                        {
+                            data <- read.csv(fn)
+                            if (nrow(data) != 0 && ncol(data) != 0) {
+                                filtered_data <- data[data$word %in% wordlist, ]
+                                if (nrow(filtered_data) != 0 && ncol(filtered_data) != 0) {
+                                    temp <- rbind(temp, filtered_data)
+                                }
+                            }
+                        },
+                        error = function(e) {
+                            print(paste("Age bin ", i, " is empty. Skipping...", sep = ""))
+                        }
+                    )
+                } else {
+                    print("File does not exist")
+                }
+            }
+            temp <- temp[, -1]
+            if (nrow(temp) != 0 && ncol(temp) != 0) {
+                colnames(temp) <- c("subj", "word", "rt", "acc", "wordLength", "realpseudo", "visit_age")
+            }
+            out_path <- paste0("ntr/summarized_ROAR_words/phoneme-", phoneme, "_grapheme-", grapheme, "_position-", position, ".csv", sep = "")
+            # Write the data to the file
+            write.csv(temp, file = out_path)
         }
     }
 }
@@ -269,6 +306,6 @@ ret <- word_pattern(scored_words_OR, phoneme = "any", grapheme = "int", position
 # desired input mappings.
 #
 # The only thing to do now is to replace this with the desired phoneme/grapheme/position mappings and the proper input scored word list and trait!
-summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "en", position = "wf", input_list = word_statistics$STRING, trait = "PG")
-summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "a_ek", position = "wf", input_list = word_statistics$STRING, trait = "PG")
-summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "any", position = "sf", input_list = word_statistics$STRING, trait = "PG")
+summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "en", position = "wf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
+summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "a_ek", position = "wf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
+summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "any", position = "sf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
