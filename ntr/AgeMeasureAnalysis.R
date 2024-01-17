@@ -78,7 +78,7 @@ output_long_bin_data <- function(long_bin_data, metadata, min_age, max_age) {
     }
 }
 
-# TODO merge this and the function below it to save time
+# TODO merge this and the function below it to save time (maybe can reverse order of for loops?)
 
 # Returns a data frame whose words are rows/pseudowords and whose columns are
 # different age bins. Each entry is the average for the respective statistic
@@ -201,7 +201,7 @@ summarize_word_list <- function(scored_words, phoneme, grapheme, position, input
         print("No words in the corpus match the provided pattern.")
     } else {
         wordlist <- match[match %in% input_list]
-        if (length(wordlist)==0) {
+        if (length(wordlist) == 0) {
             print("No matching words with the given inputs are present in the input list.")
         } else {
             summarize_words(get_scored_words(scored_words, wordlist), trait)
@@ -242,6 +242,80 @@ summarize_word_list <- function(scored_words, phoneme, grapheme, position, input
     }
 }
 
+
+# Takes in either a word in the ROAR corpus or an age (positive integer) from
+# the ROAR age range.
+# If the input is a word, outputs a histogram with the number of trials for that
+# word across all age bins.
+# If the input is an age, outputs a histogram with the number of trials for every word of the
+# ROAR corpus at that age.
+# Note that the min_age and the max_age (with range [min_age, max_age)) also
+# need to be provided as integers.
+# A list of words in the ROAR corpus also needs to be provided.
+# It is assumed that all age bins are alreday generated to ntr/age_data and
+# have not been artificially renamed.
+roar_hist <- function(input, min_age, max_age, roar_words) {
+    if (is.character(input) && input %in% roar_words) {
+        # go through all of the age bins for this word
+        # data frame with two columns: ages and counts for the word.
+        df <- data.frame(matrix(nrow = 0, ncol = 2))
+        colnames(df) <- c(age = numeric(), entries_for_word = numeric(), stringsAsFactors = FALSE)
+        for (i in floor(min_age):(ceiling(max_age)-1)) {
+            fn <- paste("ntr/age_data/bin_", i, ".csv", sep = "")
+            if (file.exists(fn)) {
+                tryCatch(
+                    {
+                        data <- read.csv(fn)
+                        if (nrow(data) != 0 && ncol(data) != 0) {
+                            df <- rbind(df, data.frame(age = i, entries_for_word = length(which(data$word == input))))
+                        } else {
+                            df <- rbind(df, data.frame(age = i, entries_for_word = 0))
+                        }
+                    },
+                    error = function(e) {
+                        print(paste("Age bin ", i, " is empty. Skipping...", sep = ""))
+                        df <- rbind(df, data.frame(age = i, entries_for_word = 0))
+                    }
+                )
+            } else {
+                print("File does not exist")
+            }
+        }
+        View(df)
+        if (nrow(df) != 0) {
+            barplot(height=df[,2], names = df[,1])
+        }
+    } else if (input %% 1 == 0 && input >= min_age && input < max_age) {
+        # go throgh all of the words in the entire corpus for this age bin
+        df <- data.frame(matrix(nrow = 0, ncol = 2))
+        colnames(df) <- c(word_pseudoword = character(), entries_for_age = numeric(), stringsAsFactors = FALSE)
+        fn <- paste("ntr/age_data/bin_", input, ".csv", sep = "")
+        if (file.exists(fn)) {
+            tryCatch(
+                {
+                    data <- read.csv(fn)
+                    if (nrow(data) != 0 && ncol(data) != 0) {
+                        for (w in roar_words) {
+                            df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = length(which(data$word == w))))
+                        }
+                    }
+                },
+                error = function(e) {
+                    print(paste("Age bin ", input, " is empty. Skipping...", sep = ""))
+                }
+            )
+        } else {
+            print("File does not exist")
+        }
+        View(df)
+        if (nrow(df) != 0) {
+            barplot(height=df[,2], names = df[,1])
+        }
+    }
+}
+
+roar_hist(6, floor(min_age), ceiling(max_age), word_statistics$STRING)
+roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING)
 
 #################
 ### SCRIPTING ###
@@ -309,3 +383,8 @@ ret <- word_pattern(scored_words_OR, phoneme = "any", grapheme = "int", position
 summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "en", position = "wf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
 summarize_word_list(scored_words = scored_words_OR, phoneme = "any", grapheme = "a_ek", position = "wf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
 summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "any", position = "sf", input_list = word_statistics$STRING, trait = "PG", min_age, max_age)
+
+# Next we want to get the statistics on how many data entries we have per word,
+# per age bin, etc, visualize with histogram.
+# Can call it like so:
+roar_hist(6, floor(min_age), ceiling(max_age), word_statistics$STRING)
