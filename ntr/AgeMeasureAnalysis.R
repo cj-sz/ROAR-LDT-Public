@@ -259,8 +259,10 @@ summarize_word_list <- function(scored_words, phoneme, grapheme, position, input
 # ("any" or a floating point threshold) to further filter data.
 # It is assumed that all age bins are alreday generated to ntr/age_data and
 # have not been artificially renamed.
-# TODO: Make both plots prettier.
+# TODO: Ouput the plots somewhere.
 roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
+    keptacc <- acc
+    keptrt <- rt
     # TODO: Add a quiet to hide this message if desires.
     print("Note that when providing an accuracy, the only data points counted will be those where the accuracy is precisely the input given (1 for accurate, 0 for inaccurate).")
     print("Note that when providing a response time, the only data points counted will be those where the response time is less than or equal to the provided input.")
@@ -296,17 +298,16 @@ roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
                     # Only the response time is specific
                     count <- 0
                     for (j in 1:nrow(data)) {
-                        if (data[j, "rt"] <= acc) {
+                        if (data[j, "word"] == input && data[j, "rt"] <= acc) {
                             count <- count + 1
                         }
                     }
                     df <- rbind(df, data.frame(age = i, entries_for_word = count))
                 } else if (rt == -1) {
-                    print("here")
                     # Only the accuracy is specific
                     count <- 0
                     for (j in 1:nrow(data)) {
-                        if (data[j, "acc"] == acc) {
+                        if (data[j, "word"] == input && data[j, "acc"] == acc) {
                             count <- count + 1
                         }
                     }
@@ -314,7 +315,7 @@ roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
                 } else {
                     count <- 0
                     for (j in 1:nrow(data)) {
-                        if (data[j, "acc"] == acc && data[j, "rt"] <= rt) {
+                        if (data[j, "word"] == input && data[j, "acc"] == acc && data[j, "rt"] <= rt) {
                             count <- count + 1
                         }
                     }
@@ -325,16 +326,17 @@ roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
                 df <- rbind(df, data.frame(age = i, entries_for_word = 0))
             }
         }
-        View(df)
+        if (!dir.exists("ntr/roar_hist_plots")) {
+            dir.create("ntr/roar_hist_plots")
+        }
         if (nrow(df) != 0) {
-            ggplot(df, aes(x = age, y = entries_for_word)) +
-                geom_bar(stat = "identity") +
-                scale_x_continuous(labels = as.character(df$age), breaks = df$age) +
-                scale_y_continuous(breaks = pretty_breaks()) +
+            ggplot(df, aes(x = age, y = entries_for_word, fill = age)) +
+                geom_bar(stat = "identity", position = "dodge") +
+                coord_cartesian(xlim = c(6, 29), ylim = c(NA, 60), expand = FALSE) +
                 labs(
                     x = "Age (1-Year Bins)",
                     y = paste("Trials for word '", input, "'", sep = ""),
-                    title = paste("Number of data points for word '", input, "' across ROAR 1-Year age bins", sep = "")
+                    title = paste("Number of data points for word '", input, "' across ROAR 1-Year age bins (acc = ", keptacc, ", rt <= ", keptrt, ")", sep = "")
                 )
         }
     } else if (input %% 1 == 0 && input >= min_age && input < max_age) {
@@ -392,9 +394,6 @@ roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
         print("Invalid input. Must be either a valid integer age (present among the ROAR age bins)or a word in the provided ROAR corpus.")
     }
 }
-
-roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING, "any", "any")
-roar_hist("invent", floor(min_age), ceiling(max_age), word_statistics$STRING, "any", "any")
 
 
 #################
@@ -467,4 +466,6 @@ summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "a
 # Next we want to get the statistics on how many data entries we have per word,
 # per age bin, etc, visualize with histogram.
 # Can call it like so:
-roar_hist(6, floor(min_age), ceiling(max_age), word_statistics$STRING)
+roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING, "any", "any")
+roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING, 0, "any")
+roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING, 1, "any")
