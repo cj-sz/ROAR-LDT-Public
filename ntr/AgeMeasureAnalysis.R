@@ -1,5 +1,7 @@
 library(tidyverse)
 library(dplyr)
+library(ggplot2)
+library(scales)
 
 # Set directory to the root directory of the project folder
 # Desktop
@@ -251,71 +253,149 @@ summarize_word_list <- function(scored_words, phoneme, grapheme, position, input
 # ROAR corpus at that age.
 # Note that the min_age and the max_age (with range [min_age, max_age)) also
 # need to be provided as integers.
-# A list of words in the ROAR corpus also needs to be provided.
+# A list of words in the ROAR corpus also needs to be provided. (providing the entire thing
+# makes the plot way too large to be useful)
+# If desired, can provide an accuracy (either "any", 1, or 0) and a response time
+# ("any" or a floating point threshold) to further filter data.
 # It is assumed that all age bins are alreday generated to ntr/age_data and
 # have not been artificially renamed.
-roar_hist <- function(input, min_age, max_age, roar_words) {
+# TODO: Make both plots prettier.
+roar_hist <- function(input, min_age, max_age, roar_words, acc, rt) {
+    # TODO: Add a quiet to hide this message if desires.
+    print("Note that when providing an accuracy, the only data points counted will be those where the accuracy is precisely the input given (1 for accurate, 0 for inaccurate).")
+    print("Note that when providing a response time, the only data points counted will be those where the response time is less than or equal to the provided input.")
+    if (!(is.character(acc) && acc == "any") && !(is.numeric(acc) && acc == 0 || acc == 1)) {
+        rt = -1
+        print("Invalid accuracy provided. Must be 'any', 1, or 0. Proceeding with 'any' accuracy.")
+    }
+    if (!(is.character(rt) && rt == "any") && !(is.double(rt) && rt > 0)) {
+        acc = -1
+        print("Invalid response time provided. Must be 'any' or a positive decimal number. Proceeding with 'any' response time.")
+    }
+    if (acc == "any") {
+        acc = -1
+    }
+    if (rt == "any") {
+        rt = -1
+    }
     if (is.character(input) && input %in% roar_words) {
         # go through all of the age bins for this word
         # data frame with two columns: ages and counts for the word.
         df <- data.frame(matrix(nrow = 0, ncol = 2))
         colnames(df) <- c(age = numeric(), entries_for_word = numeric(), stringsAsFactors = FALSE)
-        for (i in floor(min_age):(ceiling(max_age)-1)) {
+        for (i in floor(min_age):(ceiling(max_age) - 1)) {
             fn <- paste("ntr/age_data/bin_", i, ".csv", sep = "")
-            if (file.exists(fn)) {
-                tryCatch(
-                    {
-                        data <- read.csv(fn)
-                        if (nrow(data) != 0 && ncol(data) != 0) {
-                            df <- rbind(df, data.frame(age = i, entries_for_word = length(which(data$word == input))))
-                        } else {
-                            df <- rbind(df, data.frame(age = i, entries_for_word = 0))
+            # The file having one line means that it is empty (has no data) based on
+            # the way the age bins are generated in an earlier function.
+            if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
+                data <- read.csv(fn)
+                if (acc == -1 && rt == -1) {
+                    # Neither is specific
+                    df <- rbind(df, data.frame(age = i, entries_for_word = length(which(data$word == input))))
+                } else if (acc == -1) {
+                    # Only the response time is specific
+                    count <- 0
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "rt"] <= acc) {
+                            count <- count + 1
                         }
-                    },
-                    error = function(e) {
-                        print(paste("Age bin ", i, " is empty. Skipping...", sep = ""))
-                        df <- rbind(df, data.frame(age = i, entries_for_word = 0))
                     }
-                )
+                    df <- rbind(df, data.frame(age = i, entries_for_word = count))
+                } else if (rt == -1) {
+                    print("here")
+                    # Only the accuracy is specific
+                    count <- 0
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "acc"] == acc) {
+                            count <- count + 1
+                        }
+                    }
+                    df <- rbind(df, data.frame(age = i, entries_for_word = count))
+                } else {
+                    count <- 0
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "acc"] == acc && data[j, "rt"] <= rt) {
+                            count <- count + 1
+                        }
+                    }
+                    df <- rbind(df, data.frame(age = i, entries_for_word = count))
+                }
             } else {
-                print("File does not exist")
+                print(paste("File does not exist, or there are no entries for age bin ", i, ". Replacing with 0.", sep = ""))
+                df <- rbind(df, data.frame(age = i, entries_for_word = 0))
             }
         }
         View(df)
         if (nrow(df) != 0) {
-            barplot(height=df[,2], names = df[,1])
+            ggplot(df, aes(x = age, y = entries_for_word)) +
+                geom_bar(stat = "identity") +
+                scale_x_continuous(labels = as.character(df$age), breaks = df$age) +
+                scale_y_continuous(breaks = pretty_breaks()) +
+                labs(
+                    x = "Age (1-Year Bins)",
+                    y = paste("Trials for word '", input, "'", sep = ""),
+                    title = paste("Number of data points for word '", input, "' across ROAR 1-Year age bins", sep = "")
+                )
         }
     } else if (input %% 1 == 0 && input >= min_age && input < max_age) {
         # go throgh all of the words in the entire corpus for this age bin
         df <- data.frame(matrix(nrow = 0, ncol = 2))
         colnames(df) <- c(word_pseudoword = character(), entries_for_age = numeric(), stringsAsFactors = FALSE)
         fn <- paste("ntr/age_data/bin_", input, ".csv", sep = "")
-        if (file.exists(fn)) {
-            tryCatch(
-                {
-                    data <- read.csv(fn)
-                    if (nrow(data) != 0 && ncol(data) != 0) {
-                        for (w in roar_words) {
-                            df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = length(which(data$word == w))))
+        if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
+            data <- read.csv(fn)
+            for (w in roar_words) {
+                if (acc == -1 && rt == -1) {
+                    # Neither is specific
+                    df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = length(which(data$word == w))))
+                } else if (acc == -1) {
+                    # Response time is specific
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "rt"] <= rt) {
+                            count <- count + 1
                         }
                     }
-                },
-                error = function(e) {
-                    print(paste("Age bin ", input, " is empty. Skipping...", sep = ""))
+                    df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = count))
+                } else if (rt == -1) {
+                    # Accuracy is specific
+                    count <- 0
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "acc"] == acc) {
+                            count <- count + 1
+                        }
+                    }
+                    df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = count))
+                } else {
+                    # Both are specific
+                    count <- 0
+                    for (j in 1:nrow(data)) {
+                        if (data[j, "acc"] == acc && data[j, "rt"] <= rt) {
+                            count <- count + 1
+                        }
+                    }
+                    df <- rbind(df, data.frame(word_pseudoword = w, entries_for_age = count))
                 }
-            )
+            }
         } else {
-            print("File does not exist")
+            print(paste("Age bin ", input, " is empty. Skipping...", sep = ""))
         }
-        View(df)
         if (nrow(df) != 0) {
-            barplot(height=df[,2], names = df[,1])
+            ggplot(df, aes(x = word_pseudoword, y = entries_for_age)) +
+                geom_bar(stat = "identity") +
+                labs(
+                    x = "Word/Pseudoword",
+                    y = paste("Trials for age bin ", input, sep = ""),
+                    title = paste("Number of data points for word '", input, "' across ROAR 1-Year age bins", sep = "")
+                )
         }
+    } else {
+        print("Invalid input. Must be either a valid integer age (present among the ROAR age bins)or a word in the provided ROAR corpus.")
     }
 }
 
-roar_hist(6, floor(min_age), ceiling(max_age), word_statistics$STRING)
-roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING)
+roar_hist("ablood", floor(min_age), ceiling(max_age), word_statistics$STRING, "any", "any")
+roar_hist("invent", floor(min_age), ceiling(max_age), word_statistics$STRING, "any", "any")
+
 
 #################
 ### SCRIPTING ###
