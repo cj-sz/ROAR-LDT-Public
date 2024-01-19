@@ -359,8 +359,6 @@ roar_hist <- function(scored_words, input, phoneme, grapheme, position, min_age,
     }
 }
 
-roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), "any", "any")
-
 
 #################
 ### SCRIPTING ###
