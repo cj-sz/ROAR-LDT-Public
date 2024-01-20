@@ -343,13 +343,17 @@ roar_hist <- function(scored_words, input, phoneme, grapheme, position, min_age,
             }
         }
         if (length(wordlist) > 0) {
+            print("Matching words:")
+            print(paste(wordlist, sep = " "))
             ggplot(df, aes(x = age, y = entries, fill = age)) +
                 geom_bar(stat = "identity", position = "dodge") +
-                coord_cartesian(xlim = c(6, 29), ylim = c(NA, 60), expand = FALSE) +
+                geom_text(aes(label=entries), position=position_dodge(width=0.9), vjust=-0.25) +
+                scale_y_continuous(expand = c(0, 0), limits = c(0, max(df$entries) + 10)) +
+                scale_x_continuous(expand = c(0, 0), limits = c(5.5, 28.5), breaks = seq(6,29,1)) +
                 labs(
-                    x = "Age (1-Year Bins)",
-                    y = paste("Trials for word '", input, "'", sep = ""),
-                    title = paste("Number of data points for word '", input, "' across ROAR 1-Year age bins (acc = ", keptacc, ", rt <= ", keptrt, ")", sep = "")
+                    x = "Age (1-Year Bins) (inclusive lower end, exclusive upper end)",
+                    y = "Trials for matching words",
+                    title = paste("Data points for phoneme: ", phoneme, ", grapheme: ", grapheme, ", position: ", position, ", acc = ", keptacc, ", rt <= ", keptrt, ", matching words: ", length(wordlist), sep = "")
                 )
         } else {
             print("No words matched the specified inputs. Nothing to plot.")
@@ -431,4 +435,6 @@ summarize_word_list(scored_words = scored_words_OR, phoneme = "8", grapheme = "a
 templist <- words_with_mapping(scored_words = scored_words_OR, inputlist = word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf")
 templist
 # Get a plot of all ROAR words with a specified mapping corresponding to some desired criteria.
-roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), "any", "any")
+roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = "any", rt = "any")
+roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = 0, rt = "any")
+roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = 1, rt = "any")
