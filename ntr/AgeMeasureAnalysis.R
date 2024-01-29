@@ -2,10 +2,14 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(scales)
+# library(xlsx) (this neds valid java home, look into this later)
 
 # Set directory to the root directory of the project folder
 # Desktop
 setwd("C:/Users/Caleb Solomon/Documents/GitHub/ROAR-LDT-Public")
+# Laptop
+setwd("C:/Users/cjsol/Documents/Github/ROAR-LDT-public")
+
 
 # Grab the automated pg toolkit functions
 load("ntr/automated-toolkit/version 1.1/automated toolkit/PG Toolkit v1.1.RData")
@@ -403,7 +407,10 @@ output_long_bin_data(updated_long_newcodes, updated_metadata, min_age, max_age)
 # based on all of the data across age bins
 
 # Read in the word statistics
+# Changed to a doubble forward slash on radian
 word_statistics <- read.csv("data_allsubs/wordStatistics.csv")
+
+
 
 # Get the accuracies for each word and age group.
 average_word_age_accuracies <- get_avg_word_age_data("acc", updated_long_newcodes, updated_metadata, word_statistics, min_age, max_age)
@@ -438,3 +445,6 @@ templist
 roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = "any", rt = "any")
 roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = 0, rt = "any")
 roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", min_age = floor(min_age), max_age = ceiling(max_age), acc = 1, rt = "any")
+
+# Getting list of words for five high-to-low and five low-to-high mappings according to what Jeremy
+# and Michaela sent. Utilize xlsx package to write different outputs to multiple sheets.
