@@ -2,7 +2,7 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(scales)
-# library(xlsx) (this neds valid java home, look into this later)
+library(openxlsx)
 
 # Set directory to the root directory of the project folder
 # Desktop
@@ -274,7 +274,6 @@ words_with_mapping <- function(scored_words, inputlist, phoneme, grapheme, posit
 # It is assumed that all age bins are alreday generated to ntr/age_data and
 # have not been artificially renamed.
 # TODO: Ouput the plots somewhere.
-# TODO: Make the histograms better.
 roar_hist <- function(scored_words, input, phoneme, grapheme, position, min_age, max_age, acc, rt) {
     keptacc <- acc
     keptrt <- rt
@@ -367,6 +366,41 @@ roar_hist <- function(scored_words, input, phoneme, grapheme, position, min_age,
     }
 }
 
+# Fixed consolidated version. All ph/gr/po inputs assumed to be the same length. Type, "low_to_high" or
+# "high_to_low" determines the output directory.
+# TODO: Need to fix issue where columns of different lengths are not allowed. Then can send.
+output_gp_trajectories <- function(scored_words, phonemes, graphemes, positions, type) {
+    columns <- list()
+    wordlists <- data.frame()
+    out <- createWorkbook()
+    if (!file.exists("ntr/age_data/gp_trajectory_outputs")) {
+        dir.create("ntr/age_data/gp_trajectory_outputs")
+    }
+    for (i in 1:length(phonemes)) {
+        print("Creating data frame")
+        print(i)
+        columns <- append(columns, paste(phonemes[i], "+", graphemes[i], "_", positions[i], sep = ""))
+        wordlists <- word_pattern(scored_words, phonemes[i], graphemes[i], positions[i])
+    }
+    View(columns)
+    View(wordlists)
+    print("Assigning column names")
+    colnames(wordlists) <- columns 
+    writeDataTable(out, sheet = 1, x = wordlists, colNames = TRUE, rowNames = FALSE)
+
+    print("Creating worksheets")
+    for (i in 2:(1+length(phonemes))) {
+        print(i)
+        addWorksheet(out, sheetName = columns[i - 1])
+        writeDataTable(out, sheet = i, x = get_scored_words(scored_words, wordlists[i - 1]))
+    }
+
+    print("saving")
+    saveWorkbook(out, paste("ntr/age_data/gp_trajectory_outputs/", type, ".csv", sep = ""), overwrite = TRUE)
+}
+
+
+output_gp_trajectories(scored_words_PG, l2hph, l2hg, l2hpo, "low_to_high")
 
 #################
 ### SCRIPTING ###
@@ -448,3 +482,42 @@ roar_hist(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "
 
 # Getting list of words for five high-to-low and five low-to-high mappings according to what Jeremy
 # and Michaela sent. Utilize xlsx package to write different outputs to multiple sheets.
+# 5 low to high: 
+# ɪ+e_wi (ɪ is encoded as "1" in the toolkit)
+# k+c_wf
+# i+ie_wf
+# oʊ+oe_wf (oʊ with the little omega is encoded as "o" in the toolkit)
+# u+u_wf
+l2h1 <- word_pattern(scored_words_PG, phoneme = "1", grapheme = "e", position = "wi")
+l2h2 <- word_pattern(scored_words_PG, phoneme = "k", grapheme = "c", position = "wf")
+l2h3 <- word_pattern(scored_words_PG, phoneme = "i", grapheme = "ie", position = "wf")
+l2h4 <- word_pattern(scored_words_PG, phoneme = "o", grapheme = "oe", position = "wf")
+l2h5 <- word_pattern(scored_words_PG, phoneme = "u", grapheme = "u", position = "wf")
+# 5 high to low: 
+# u+ough_wf
+# ju+u_wf 
+# eɪ+ae_wf (note eɪ is encoded as "8" in the toolkit)
+# aʊ+ho_wi (note aʊ is encoded as "O" in the toolkit)
+# u+ou_wf'
+# These last five have a lot fewer entries, so less likely they have intersection with the toolkit 
+h2l1 <- word_pattern(scored_words_PG, phoneme = "u", grapheme = "ough", position = "wf")
+h2l2 <- word_pattern(scored_words_PG, phoneme = "ju", grapheme = "u", position = "wf")
+h2l3 <- word_pattern(scored_words_PG, phoneme = "8", grapheme = "ae", position = "wf")
+h2l4 <- word_pattern(scored_words_PG, phoneme = "O", grapheme = "ho", position = "wi")
+h2l5 <- word_pattern(scored_words_PG, phoneme = "u", grapheme = "ou", position = "wf")
+# concat these to list of lists and get the summarized outputs and lists themselves in an excel sheet 
+low2high <- list(l2h1, l2h2, l2h3, l2h4, l2h5)
+high2low <- list(h2l1, h2l1, h2l3, h2l4, h2l5)
+
+# as ex 
+l2hph <- c("1", "k", "i", "o", "u")
+l2hg <- c("e", "c", "ie", "oe", "u")
+l2hpo <- c("wi", "wf", "wf", "wf", "wf")
+h2lph <- c("u", "ju", "8", "O", "u")
+h2lg <- c("ough", "u", "ae", "ho", "ou")
+h2lpo <- c("wf", "wf", "wf", "wi", "wf")
+
+# Reformat the calls of the gp trajectory outputs after writing the function 
+# Make the function a single call with a parameter for the name of the directory
+# to get rid of duplicate code after this.
+output_gp_trajectories(scored_words_PG, l2hph, l2hg, l2hpo, "low_to_high")
