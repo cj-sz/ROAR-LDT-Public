@@ -381,9 +381,11 @@ output_gp_trajectories <- function(scored_words, phonemes, graphemes, positions,
         wordlists <- c(wordlists, list(word_pattern(scored_words, phonemes[i], graphemes[i], positions[i])))
     }
     maxlistsize <- length(wordlists[[1]])
-    for (i in 2:(length(wordlists))) {
-        if (length(wordlists[[i]]) > maxlistsize) {
-            maxlistsize <- length(wordlists[[i]])
+    if (length(wordlists) >= 2) {
+        for (i in 2:(length(wordlists))) {
+            if (length(wordlists[[i]]) > maxlistsize) {
+                maxlistsize <- length(wordlists[[i]])
+            }
         }
     }
     df <- data.frame(matrix(NA, nrow = maxlistsize, ncol = length(phonemes)))
@@ -517,3 +519,6 @@ output_gp_trajectories(scored_words_PG, l2hph, l2hg, l2hpo, "low_to_high_Toolkit
 output_gp_trajectories(scored_words_PG, h2lph, h2lg, h2lpo, "high_to_low_Toolkit")
 output_gp_trajectories(get_scored_words(scored_words_PG, word_statistics$STRING), l2hph, l2hg, l2hpo, "low_to_high_ROAR")
 output_gp_trajectories(get_scored_words(scored_words_PG, word_statistics$STRING), h2lph, h2lg, h2lpo, "high_to_low_ROAR")
+
+# Requested additional wordlist: ɑ+ho_wi
+output_gp_trajectories(scored_words_PG, c("a"), c("ho"), c("wi"), "a_ho_wi_Toolkit")
