@@ -2,7 +2,7 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(scales)
-library(openxlsx)
+library(openxlsx) # used later when working with multiple sheets
 
 # Set directory to the root directory of the project folder
 # Desktop
@@ -26,6 +26,10 @@ long_newcodes_data <- read.csv("data_allsubs/LDT_alldata_long_newcodes.csv")
 wide_newcodes_data <- read.csv("data_allsubs/LDT_alldata_wide_newcodes.csv")
 
 ### DEFINE USEFUL FUNCTIONS USED IN THE SCRIPT FILE BELOW ###
+
+# LATER TODO: Enforce safety in all funcs
+# ALSO TODO: need a defined convention for min_age:max_age seq 
+# TODO: Universal convention for writing outputs (always within funcs, or always with return)
 
 # Rounding function
 # Takes in a list of elements, and a number of trailing decimal places to be
@@ -412,6 +416,59 @@ output_gp_trajectories <- function(scored_words, phonemes, graphemes, positions,
     saveWorkbook(out, paste("ntr/age_data/gp_trajectory_outputs/", type, ".xlsx", sep = ""), overwrite = TRUE)
 }
 
+# Returns descriptive statistic averages for response time and accuracy for all words
+# with the given mapping in the ROAR database, within the provided age bins
+# left inclusive, right exclusive.
+# Assumes min_age and max_age are ints (can add a check for this later)
+# Requires that all age bins are generated to ntr/age_data
+roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age) {
+    # Need to divide total of rt and acc by the number of entries for that word (total data points)
+    if (max_age <= min_age) {
+        print("Invalid age range provided")
+        stop()
+    }
+    corresp_roar_words <- words_with_mapping(scored_words, roar_words, phoneme, grapheme, position)
+    if (length(corresp_roar_words) == 0) {
+        print("No matching words exist in the ROAR corpus.")
+        stop()
+    }
+    # Then based on the word list iterate through all respective age bins and construct a data frame
+    # containing the average for that word for rt and acc.
+    # Might be easier to make individual data frames for every word and keep track of average after,
+    # or create some sort of hash table to do so.
+    # Need error checks for when an age bin is empty. Check above methods for error message.
+    df <- data.frame(matrix(ncol = 4, nrow = 0), stringsAsFactors = FALSE)
+    colnames(df) <- c("word", "num_entries", "avg_rt", "avg_acc")
+    for (i in min_age:(max_age - 1)) {
+        # Information on handling empty bins is working in the roar_hist function above.
+        fn <- paste("ntr/age_data/bin_", i, ".csv", sep = "")
+        if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
+            data <- read.csv(fn)
+            for (j in 1:nrow(data)) {
+                w <- data[j, "word"]
+                # TODO: invert this condition so it looks nicer
+                if (w %in% corresp_roar_words && w %in% df$word) {
+                    df$num_entries[df$word == w] <- as.numeric(df$num_entries[df$word == w]) + 1
+                    df$avg_rt[df$word == w] <- as.numeric(df$avg_rt[df$word == w]) + as.numeric(data[j, "rt"])
+                    df$avg_acc[df$word == w] <- as.numeric(df$avg_acc[df$word == w]) + as.numeric(data[j, "acc"])
+                } else if (w %in% corresp_roar_words) {
+                    df[nrow(df)+1,] <- c(w, 1, data[j, "rt"], data[j, "acc"])
+                }
+            }
+        }
+    }
+    for (word in df$word) {
+        df$avg_rt[df$word == word] <- as.numeric(df$avg_rt[df$word == word]) / as.numeric(df$num_entries[df$word == word])
+        df$avg_acc[df$word == word] <- as.numeric(df$avg_acc[df$word == word]) / as.numeric(df$num_entries[df$word == word])
+    }
+    # round
+    df$avg_rt <- round_list(as.numeric(df$avg_rt), 3)
+    df$avg_acc <- round_list(as.numeric(df$avg_acc), 3)
+    View(df)
+}
+
+roar_averages(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age))
+
 #################
 ### SCRIPTING ###
 #################
@@ -522,3 +579,8 @@ output_gp_trajectories(get_scored_words(scored_words_PG, word_statistics$STRING)
 
 # Requested additional wordlist: ɑ+ho_wi
 output_gp_trajectories(scored_words_PG, c("a"), c("ho"), c("wi"), "a_ho_wi_Toolkit")
+
+# Next getting average response time and accuracy for all words with a given mapping
+# for a range of age bins.
+# roar_averages call:
+roar_averages(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age))
