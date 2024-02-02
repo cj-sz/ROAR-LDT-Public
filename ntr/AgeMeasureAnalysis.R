@@ -464,10 +464,9 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
     # round
     df$avg_rt <- round_list(as.numeric(df$avg_rt), 3)
     df$avg_acc <- round_list(as.numeric(df$avg_acc), 3)
-    View(df)
-}
 
-roar_averages(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age))
+    # need to write to a csv, and incorporate other average measures 
+}
 
 #################
 ### SCRIPTING ###
