@@ -466,6 +466,10 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
     df$avg_acc <- round_list(as.numeric(df$avg_acc), 3)
 
     # need to write to a csv, and incorporate other average measures 
+    # note that summarize_words yields a DATA FRAME, but only for a specific measure.
+    # Write an example call to a csv and examine it, to see what it is, and then call on
+    # the desired wordlist to get all the status for that trait. Do for all traits.
+    # Write this to the csv.
 }
 
 #################
