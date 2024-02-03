@@ -470,7 +470,19 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
     # Write an example call to a csv and examine it, to see what it is, and then call on
     # the desired wordlist to get all the status for that trait. Do for all traits.
     # Write this to the csv.
+    # From summarize_words: grab “PG” (spelling consistency), “GP” (reading consistency), “P_freq” (phoneme frequency), “G_freq” (grapheme frequency), and “PG_freq” (phonographeme frequency)
+    # From word_statistics: we can grab some measures later if desired. need to check up on what each of them means.
+    # Grab all the scored words (will need to do this for everything)
+    # For now we are just writing to a csv and we can get these statistics later
+    # Create the directory
+    df <- apply(df,2,as.character)
+    if (!file.exists("ntr/age_data/roar_averages")) {
+        dir.create("ntr/age_data/roar_averages")
+    }
+    fp <- paste("ntr/age_data/roar_averages/", phoneme, "_", grapheme, "_", position, "_min-", min_age, "_max-", max_age, ".csv", sep = "")
+    write.csv(df, fp)
 }
+
 
 #################
 ### SCRIPTING ###
@@ -582,6 +594,10 @@ output_gp_trajectories(get_scored_words(scored_words_PG, word_statistics$STRING)
 
 # Requested additional wordlist: ɑ+ho_wi
 output_gp_trajectories(scored_words_PG, c("a"), c("ho"), c("wi"), "a_ho_wi_Toolkit")
+# eɪ+ae_wf
+# i+ae_wf
+output_gp_trajectories(scored_words_PG, c("8"), c("ae"), c("wf"), "8_ae_wf_Toolkit")
+output_gp_trajectories(scored_words_PG, c("i"), c("ae"), c("wf"), "i_ae_wf_Toolkit")
 
 # Next getting average response time and accuracy for all words with a given mapping
 # for a range of age bins.
