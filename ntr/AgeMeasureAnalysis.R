@@ -479,7 +479,7 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
     if (!file.exists("ntr/age_data/roar_averages")) {
         dir.create("ntr/age_data/roar_averages")
     }
-    fp <- paste("ntr/age_data/roar_averages/", phoneme, "_", grapheme, "_", position, "_min-", min_age, "_max-", max_age, ".csv", sep = "")
+    fp <- paste("ntr/age_data/roar_averages/phon-", phoneme, "_graph-", grapheme, "_pos-", position, "_min-", min_age, "_max-", max_age, ".csv", sep = "")
     write.csv(df, fp)
 }
 
