@@ -483,6 +483,60 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
     write.csv(df, fp)
 }
 
+# We want to get the number of graphemes, phonemes, phonographeme mappings, and onset/rime units (unique for all)
+# present in the entire toolkit 
+# Requires the Toolkit to be loaded.
+get_toolkit_units <- function() {
+    graphemes <- unique(all_tables_PG[[1]]$grapheme)
+    phonemes <- unique(all_tables_PG[[1]]$phoneme)
+    # WLOG, #phonographeme mappings = length(all_tables_PG[[1]]$phoneme/grapheme)
+    # WLOG is the same for onset/rime mappings, i.e. length(all_tables_OR[[1]]$phoneme/grapheme)
+    print(paste("Unique graphemes: ", length(graphemes), sep = ""))
+    print(paste("Unique phonemes: ", length(phonemes), sep = ""))
+    print(paste("Unique phonographeme mappings: ", length(all_tables_PG[[1]]$grapheme), sep = ""))
+    print(paste("Unique onset/rime mappings: ", length(all_tables_OR[[1]]$grapheme), sep = ""))
+}
+
+# Takes in: scored words, roar words, phoneme, grapheme, position, min_age, max_age, step
+# Returns a plot of the ROAR accuracy and response time statistics for that mapping for age bins
+# binned based on the integer step.
+# Requires PG Toolkit to be loaded so that the outputs of roar_averages can be used.
+roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age, step) {
+    min <- floor(min_age)
+    # First we need to get all the relevant plots
+    min_age <- floor(min_age) # TODO need to make these consistent integer force checks across all functions
+    max_age <- ceiling(max_age)
+    while (min < max_age) {
+        print(paste(min, max_age, sep = " "))
+        roar_averages(scored_words, roar_words, phoneme, grapheme, position, min, min(max_age, (min + step)))
+        min <- min + step
+    }
+    # Now iterate through and get all the data for the plots
+    # If empty, don't add a data point.
+    df <- data.frame(matrix(ncol = 3, nrow = 0), stringsAsFactors = FALSE)
+    colnames(df) <- c("bin", "avg_rt", "avg_acc")
+    min <- floor(min_age)
+    while (min < max_age) {
+        fn <- paste("ntr/age_data/roar_averages/phon-", phoneme, "_graph-", grapheme, "_pos-", position, "_min-", min, "_max-", min(max_age, (min + step)), ".csv", sep = "")
+        if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
+            data <- read.csv(fn)
+            df[nrow(df) + 1, ] <- c(min, mean(data$avg_rt), mean(data$avg_acc))
+        }
+        min <- min + step
+    }
+    # Plot it
+    # TODO: Nicer plots, better axes, thicker lines, different bin types :Q:
+    ggplot(df, aes(x = bin)) +
+        geom_line(aes(y = avg_rt, colour = "avg_rt")) +
+        geom_line(aes(y = avg_acc, colour = "avg_acc")) +
+        labs(
+            x = "placeholder",
+            y = "placeholder",
+            title = "placeholder"
+        )
+}
+
+roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
 
 #################
 ### SCRIPTING ###
@@ -603,3 +657,9 @@ output_gp_trajectories(scored_words_PG, c("i"), c("ae"), c("wf"), "i_ae_wf_Toolk
 # for a range of age bins.
 # roar_averages call:
 roar_averages(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age))
+
+# We also needed some general stats on the number of mappings in the toolkit.
+get_toolkit_units()
+
+# Now we want to do some plots for the interested mappings.
+roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
