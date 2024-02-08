@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(scales)
 library(openxlsx) # used later when working with multiple sheets
+library(ggrepel)
 
 # Set directory to the root directory of the project folder
 # Desktop
@@ -507,7 +508,6 @@ roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, posi
     min_age <- floor(min_age) # TODO need to make these consistent integer force checks across all functions
     max_age <- ceiling(max_age)
     while (min < max_age) {
-        print(paste(min, max_age, sep = " "))
         roar_averages(scored_words, roar_words, phoneme, grapheme, position, min, min(max_age, (min + step)))
         min <- min + step
     }
@@ -524,20 +524,29 @@ roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, posi
         }
         min <- min + step
     }
+    # Change all names of x column entries to reflect the age bins
+    # TODO remove unnecessary column bin 
+    df$bin_labels <- df$bin
+    for (i in 1:length(df$bin_labels)) {
+        df$bin_labels[i] <- paste("(", df$bin[i], "-", min(as.numeric(df$bin[i]) + step, max_age), ")", sep = "")
+    }
+    df$bin_labels <- factor(df$bin_labels, levels = df$bin_labels)
     # Plot it
     # TODO: Nicer plots, better axes, thicker lines, different bin types :Q:
-    ggplot(df, aes(x = bin)) +
-        geom_line(aes(y = avg_rt, colour = "avg_rt")) +
-        geom_line(aes(y = avg_acc, colour = "avg_acc")) +
+    ggplot(df, aes(x = bin_labels)) +
+        geom_line(aes(y = avg_rt, colour = "avg_rt"), group = 1) +
+        geom_line(aes(y = avg_acc, colour = "avg_acc"), group = 1) +
+        geom_point(aes(y = avg_rt, colour = "avg_rt", size = 0.2), group = 1) +
+        geom_point(aes(y = avg_acc, colour = "avg_acc", size = 0.2), group = 1) +
+        geom_text_repel(aes(y = avg_rt, label = avg_rt, colour = "avg_rt"), group = 1) +
+        geom_text_repel(aes(y = avg_acc, label = avg_acc, colour = "avg_acc"), group = 1) +
         labs(
-            x = "placeholder",
-            y = "placeholder",
-            title = "placeholder"
+            x = "Age Bins (left-inclusive, right-exclusive)",
+            y = "Accuracy (%) and Response Time (s)",
+            title = paste("Average Accuracy and Response Time Across Age Bins: Grapheme: ", grapheme, ", Phoneme: ", phoneme, ", Position: ", position, sep = "")
         )
 }
-
-roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
-
+    
 #################
 ### SCRIPTING ###
 #################
@@ -662,4 +671,9 @@ roar_averages(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme
 get_toolkit_units()
 
 # Now we want to do some plots for the interested mappings.
+# Some examples:
 roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
+
+roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 6)
+
+# NEXT: Write a function that does it for all of the interested mappings, but only accuracy or response time.
