@@ -498,11 +498,13 @@ get_toolkit_units <- function() {
     print(paste("Unique onset/rime mappings: ", length(all_tables_OR[[1]]$grapheme), sep = ""))
 }
 
+### TODO: Clean up below functions, get rid of duplicate code, require loaded but not passed scored_words and grab from OR.
+
 # Takes in: scored words, roar words, phoneme, grapheme, position, min_age, max_age, step
 # Returns a plot of the ROAR accuracy and response time statistics for that mapping for age bins
 # binned based on the integer step.
-# Requires PG Toolkit to be loaded so that the outputs of roar_averages can be used.
-roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age, step) {
+# Requires PG Toolkit to be loaded so that the outputs of roar_averages can be used. scored_words_OR only.
+roar_average_plots_OR <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age, step) {
     min_age <- floor(min_age)
     min <- min_age # TODO need to make these consistent integer force checks across all functions
     max_age <- ceiling(max_age)
@@ -519,12 +521,12 @@ roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, posi
         fn <- paste("ntr/age_data/roar_averages/phon-", phoneme, "_graph-", grapheme, "_pos-", position, "_min-", min, "_max-", min(max_age, (min + step)), ".csv", sep = "")
         if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
             data <- read.csv(fn)
-            df[nrow(df) + 1, ] <- c(min, mean(data$avg_rt), mean(data$avg_acc))
+            df[nrow(df) + 1, ] <- c(min, mean(as.numeric(data$avg_rt)), mean(as.numeric(data$avg_acc)))
         }
         min <- min + step
     }
     # Change all names of x column entries to reflect the age bins
-    # TODO remove unnecessary column bin 
+    # TODO remove unnecessary column bin
     df$bin_labels <- df$bin
     for (i in 1:length(df$bin_labels)) {
         df$bin_labels[i] <- paste("(", df$bin[i], "-", min(as.numeric(df$bin[i]) + step, max_age), ")", sep = "")
@@ -545,6 +547,55 @@ roar_average_plots <- function(scored_words, roar_words, phoneme, grapheme, posi
             title = paste("Average Accuracy and Response Time Across Age Bins: Grapheme: ", grapheme, ", Phoneme: ", phoneme, ", Position: ", position, sep = "")
         )
 }
+
+# Same as roar_average_plots_OR, but for the PG dataset.
+roar_average_plots_PG <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age, step) {
+    min_age <- floor(min_age)
+    min <- min_age # TODO need to make these consistent integer force checks across all functions
+    max_age <- ceiling(max_age)
+    while (min < max_age) {
+        roar_averages(scored_words, roar_words, phoneme, grapheme, position, min, min(max_age, (min + step)))
+        min <- min + step
+    }
+    # Now iterate through and get all the data for the plots
+    # If empty, don't add a data point.
+    df <- data.frame(matrix(ncol = 3, nrow = 0), stringsAsFactors = FALSE)
+    colnames(df) <- c("bin", "avg_rt", "avg_acc")
+    min <- floor(min_age)
+    while (min < max_age) {
+        fn <- paste("ntr/age_data/roar_averages/phon-", phoneme, "_graph-", grapheme, "_pos-", position, "_min-", min, "_max-", min(max_age, (min + step)), ".csv", sep = "")
+        if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
+            data <- read.csv(fn)
+            df[nrow(df) + 1, ] <- # WILL NEED A LOT OF AVERAGES HERE AND BELOW, TODO
+        }
+        min <- min + step
+    }
+    # Change all names of x column entries to reflect the age bins
+    # TODO remove unnecessary column bin
+    df$bin_labels <- df$bin
+    for (i in 1:length(df$bin_labels)) {
+        df$bin_labels[i] <- paste("(", df$bin[i], "-", min(as.numeric(df$bin[i]) + step, max_age), ")", sep = "")
+    }
+    df$bin_labels <- factor(df$bin_labels, levels = df$bin_labels)
+    # Plot it
+    # TODO: Nicer plots, better axes, thicker lines, different bin types :Q:
+    ggplot(df, aes(x = bin_labels)) +
+        geom_line(aes(y = avg_rt, colour = "avg_rt"), group = 1) +
+        geom_line(aes(y = avg_acc, colour = "avg_acc"), group = 1) +
+        geom_point(aes(y = avg_rt, colour = "avg_rt", size = 0.2), group = 1) +
+        geom_point(aes(y = avg_acc, colour = "avg_acc", size = 0.2), group = 1) +
+        geom_text_repel(aes(y = avg_rt, label = avg_rt, colour = "avg_rt"), group = 1) +
+        geom_text_repel(aes(y = avg_acc, label = avg_acc, colour = "avg_acc"), group = 1) +
+        labs(
+            x = "Age Bins (left-inclusive, right-exclusive)",
+            y = "Accuracy (%) and Response Time (s)",
+            title = paste("Average Accuracy and Response Time Across Age Bins: Grapheme: ", grapheme, ", Phoneme: ", phoneme, ", Position: ", position, sep = "")
+        )
+}
+
+# TODO TESTING
+roar_average_plots_PG(scored_words_PG, rwords, "u", "ough", "wf", 6, 28, 6)
+
 
 # Takes in a set of phoneme/grapheme/position mappings, as well as age binning min, max, and step, and outputs
 # a single plot with either accuracy or response time (based on the parameter passed in) for those
@@ -601,9 +652,23 @@ roar_acc_rt_plots <- function(scored_words, roar_words, phonemes, graphemes, pos
         )
 }
 
-roar_acc_rt_plots(scored_words_OR, word_statistics$STRING, c("any"), c("a_ek"), c("wf"), 6, 28, 4, "avg_acc")
+# Returns a list of all mappings present in the ROAR dataset at the PG level.
+get_roar_mappings <- function(scored_words, roar_words) {
+    mapping_list <- c()
+    wordlist <- get_scored_words(scored_words, roar_words)
+    for (i in 1:length(wordlist)) {
+        word <- wordlist[[i]]
+        # Notice row 1 is phoneme, 2 is grapheme, and 3 is position, always
+        for (cell in seq_along(word[1, ])) {
+            mapping <- paste(word[1, cell], "_", word[2, cell], "_", word[3, cell], sep = "")
+            if (!(mapping %in% mapping_list)) {
+                mapping_list <- c(mapping_list, mapping)
+            }
+        }
+    }
+    return(mapping_list)
+}
 
-roar_acc_rt_plots(scored_words_PG, word_statistics$STRING, l2hph, l2hg, l2hpo, min_age, max_age, 4, "avg_acc")    
 #################
 ### SCRIPTING ###
 #################
@@ -729,8 +794,32 @@ get_toolkit_units()
 
 # Now we want to do some plots for the interested mappings.
 # Some examples:
-roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
+roar_average_plots_OR(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 2)
 
-roar_average_plots(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 6)
+roar_average_plots_OR(scored_words_OR, word_statistics$STRING, phoneme = "any", grapheme = "a_ek", position = "wf", floor(min_age), ceiling(max_age), 6)
 
 # NEXT: Write a function that does it for all of the interested mappings, but only accuracy or response time.
+roar_acc_rt_plots(scored_words_OR, word_statistics$STRING, c("any"), c("a_ek"), c("wf"), 6, 28, 4, "avg_acc")
+
+# Seems we don't have some of these mappings, getting a match error.
+roar_acc_rt_plots(scored_words_PG, word_statistics$STRING, l2hph, l2hg, l2hpo, min_age, max_age, 4, "avg_acc")
+
+# Determine if we even have all of the desired mappings first in the ROAR set.
+roar_mappings <- get_roar_mappings(scored_words_OR, word_statistics$STRING)
+interested_mappings <- c()
+for (i in 1:length(l2hph)) {
+    interested_mappings <- c(interested_mappings, paste(l2hph[i], "_", l2hg[i], "_", l2hpo[i], sep = ""))
+    interested_mappings <- c(interested_mappings, paste(h2lph[i], "_", h2lg[i], "_", h2lpo[i], sep = ""))
+}
+for (mapping in interested_mappings) {
+    if (mapping %in% roar_mappings) {
+        print(mapping)
+    }
+}
+# Seems we only have the following two mappings:
+# "u_ough_wf"
+# "u_ou_wf"
+rwords <- word_statistics$STRING
+# This graph isn't working yet 
+roar_acc_rt_plots(scored_words_PG, rwords, c("u"), c("ough"), c("wf"), 6, 28, 4, "avg_acc")
+
