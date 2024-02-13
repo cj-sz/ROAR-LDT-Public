@@ -549,6 +549,7 @@ roar_average_plots_OR <- function(scored_words, roar_words, phoneme, grapheme, p
 }
 
 # Same as roar_average_plots_OR, but for the PG dataset.
+# This might not actually be necessary 
 roar_average_plots_PG <- function(scored_words, roar_words, phoneme, grapheme, position, min_age, max_age, step) {
     min_age <- floor(min_age)
     min <- min_age # TODO need to make these consistent integer force checks across all functions
@@ -593,9 +594,19 @@ roar_average_plots_PG <- function(scored_words, roar_words, phoneme, grapheme, p
         )
 }
 
-# TODO TESTING
-roar_average_plots_PG(scored_words_PG, rwords, "u", "ough", "wf", 6, 28, 6)
+roar_averages(scored_words_OR, rwords, "u", "ough", "wf", 6, 28)
 
+# TODO TESTING
+roar_average_plots_OR(scored_words_OR, rwords, "any", "a_ek", "wf", 6, 28, 6)
+# "u_ough_wf"
+# "u_ou_wf"
+# Seems to be an error where if there is only one matching word, roar_average outputs are not correctly generated
+# Try the second mapping
+words_with_mapping(scored_words_OR, word_statistics$STRING, "u", "ou", "wf")
+# Also only one. Trying:
+roar_average_plots_OR(scored_words_OR, rwords, "u", "ou", "wf", 6, 28, 6)
+# Again doesn't work. Wrong formatted output again.
+# May need to entirely reformat in order to use PG.
 
 # Takes in a set of phoneme/grapheme/position mappings, as well as age binning min, max, and step, and outputs
 # a single plot with either accuracy or response time (based on the parameter passed in) for those
@@ -821,5 +832,5 @@ for (mapping in interested_mappings) {
 # "u_ou_wf"
 rwords <- word_statistics$STRING
 # This graph isn't working yet 
-roar_acc_rt_plots(scored_words_PG, rwords, c("u"), c("ough"), c("wf"), 6, 28, 4, "avg_acc")
+roar_acc_rt_plots(scored_words_OR, rwords, c("u"), c("ough"), c("wf"), 6, 28, 4, "avg_acc")
 
