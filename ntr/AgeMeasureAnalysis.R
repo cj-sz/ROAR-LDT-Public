@@ -447,7 +447,6 @@ roar_averages <- function(scored_words, roar_words, phoneme, grapheme, position,
             data <- read.csv(fn)
             for (j in 1:nrow(data)) {
                 w <- data[j, "word"]
-                # TODO: invert this condition so it looks nicer
                 if (w %in% corresp_roar_words && w %in% df$word) {
                     df$num_entries[df$word == w] <- as.numeric(df$num_entries[df$word == w]) + 1
                     df$avg_rt[df$word == w] <- as.numeric(df$avg_rt[df$word == w]) + as.numeric(data[j, "rt"])
@@ -567,7 +566,7 @@ roar_average_plots_PG <- function(scored_words, roar_words, phoneme, grapheme, p
         fn <- paste("ntr/age_data/roar_averages/phon-", phoneme, "_graph-", grapheme, "_pos-", position, "_min-", min, "_max-", min(max_age, (min + step)), ".csv", sep = "")
         if (file.exists(fn) && length(readLines(fn, n = -1)) != 1) {
             data <- read.csv(fn)
-            df[nrow(df) + 1, ] <- # WILL NEED A LOT OF AVERAGES HERE AND BELOW, TODO
+            # df[nrow(df) + 1, ] <- # WILL NEED A LOT OF AVERAGES HERE AND BELOW, TODO
         }
         min <- min + step
     }
